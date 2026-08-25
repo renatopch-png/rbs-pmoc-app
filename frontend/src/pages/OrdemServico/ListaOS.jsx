@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../services/firebase";
 
 export default function ListaOS() {
+  const navigate = useNavigate();
   const [ordens, setOrdens] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
@@ -43,7 +45,7 @@ export default function ListaOS() {
     <div className="p-6">
       <h1 className="mb-1 text-2xl font-bold text-gray-900">Ordens de serviço</h1>
       <p className="mb-6 text-sm text-gray-600">
-        Histórico de manutenções executadas, com checklist e evidência fotográfica.
+        Histórico de manutenções executadas, com checklist, fotos e geração de PDF PMOC.
       </p>
 
       {erro && (
@@ -121,7 +123,7 @@ export default function ListaOS() {
                   )}
 
                   {Array.isArray(os.fotos) && os.fotos.length > 0 && (
-                    <div>
+                    <div className="mb-4">
                       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Fotos ({os.fotos.length})
                       </h3>
@@ -138,6 +140,16 @@ export default function ListaOS() {
                       </div>
                     </div>
                   )}
+
+                  {/* Botões de ação */}
+                  <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+                    <button
+                      onClick={() => navigate(`/relatorios/pmoc/${os.id}`)}
+                      className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-900"
+                    >
+                      📄 Gerar PDF PMOC
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
