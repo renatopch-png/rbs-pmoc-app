@@ -11,15 +11,13 @@ const CNPJ_RBS = "33.632.222/0001-86";
 const ENDERECO_RBS = "Rua Capitão Ferreira, 86 - Rio de Janeiro";
 const TELEFONE_RBS = "(21) 98765-4321";
 
-export default function GeradorART() {   
+export default function GeradorART() {
   const { osId } = useParams();
   const navigate = useNavigate();
   const [ordem, setOrdem] = useState(null);
   const [cliente, setCliente] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
-  const [assinouCliente, setAssinouCliente] = useState(false);
-  const [assinouTecnico, setAssinouTecnico] = useState(false);
 
   useEffect(() => {
     (async () => {
