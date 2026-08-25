@@ -11,6 +11,8 @@ import Cronograma from "./pages/Cronograma";
 import ListaOS from "./pages/OrdemServico/ListaOS";
 import ExecucaoOS from "./pages/OrdemServico/ExecucaoOS";
 import GeradorPMOC from "./pages/Relatorios/GeradorPMOC";
+import GeradorART from "./pages/Relatorios/GeradorART";
+import Agendador from "./pages/Relatorios/Agendador";
 import Relatorios from "./pages/Relatorios/Relatorios";
 
 function Privada({ children }) {
@@ -29,10 +31,11 @@ export default function App() {
         <Route path="/" element={<Privada><Dashboard /></Privada>} />
         <Route path="/clientes" element={<Privada><ListaClientes /></Privada>} />
         <Route path="/equipamentos" element={<Privada><ListaEquipamentos /></Privada>} />
-        <Route path="/cronograma" element={<Privada><Cronograma /></Privada>} />
+        <Route path="/cronograma" element={<Privada><Agendador /></Privada>} />
         <Route path="/ordens-servico" element={<Privada><ListaOS /></Privada>} />
         <Route path="/ordens-servico/executar/:equipamentoId" element={<Privada><ExecucaoOS /></Privada>} />
         <Route path="/relatorios/pmoc/:osId" element={<Privada><GeradorPMOC /></Privada>} />
+        <Route path="/relatorios/art/:osId" element={<Privada><GeradorART /></Privada>} />
         <Route path="/relatorios" element={<Privada><Relatorios /></Privada>} />
       </Routes>
       <InstallBanner />
