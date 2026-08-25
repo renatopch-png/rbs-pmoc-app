@@ -9,6 +9,7 @@ import ListaClientes from "./pages/Clientes/ListaClientes";
 import ListaEquipamentos from "./pages/Equipamentos/ListaEquipamentos";
 import Cronograma from "./pages/Cronograma";
 import ListaOS from "./pages/OrdemServico/ListaOS";
+import ExecucaoOS from "./pages/OrdemServico/ExecucaoOS";
 import Relatorios from "./pages/Relatorios/Relatorios";
 
 function Privada({ children }) {
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/equipamentos" element={<Privada><ListaEquipamentos /></Privada>} />
       <Route path="/cronograma" element={<Privada><Cronograma /></Privada>} />
       <Route path="/ordens-servico" element={<Privada><ListaOS /></Privada>} />
+      <Route path="/ordens-servico/executar/:equipamentoId" element={<Privada><ExecucaoOS /></Privada>} />
       <Route path="/relatorios" element={<Privada><Relatorios /></Privada>} />
     </Routes>
     <InstallBanner />
