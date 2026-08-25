@@ -142,18 +142,26 @@ export default function ListaOS() {
                   )}
 
                   {/* Botões de ação */}
-                 <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
-  <button
-    onClick={() => navigate(`/relatorios/pmoc/${os.id}`)}
-    className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-900"
-  >
-    📄 Gerar PDF PMOC
-  </button>
-  <button
-    onClick={() => navigate(`/relatorios/art/${os.id}`)}
-    className="rounded-lg bg-orange-800 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-900"
-  >
-    📜 Gerar ART
-  </button>
-</div>
-        
+                  <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+                    <button
+                      onClick={() => navigate(`/relatorios/pmoc/${os.id}`)}
+                      className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-900"
+                    >
+                      📄 Gerar PDF PMOC
+                    </button>
+                    <button
+                      onClick={() => navigate(`/relatorios/art/${os.id}`)}
+                      className="rounded-lg bg-orange-800 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-900"
+                    >
+                      📜 Gerar ART
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
