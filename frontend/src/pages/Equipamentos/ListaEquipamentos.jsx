@@ -13,22 +13,9 @@ import {
 } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import QRCode from "qrcode.react";
+import { TIPOS_EQUIPAMENTO } from "../../data/checklistsEquipamento";
 
-const TIPOS = [
-  "Split Hi-Wall",
-  "Split Piso-Teto",
-  "Split Cassete",
-  "Multi Split / VRF",
-  "Self-contained",
-  "Chiller",
-  "Fancoil",
-  "ACJ (Janela)",
-  "Câmara Fria",
-  "Cortina de Ar",
-  "Exaustor",
-  "Rede de Dutos",
-  "Outro",
-];
+const TIPOS = TIPOS_EQUIPAMENTO;
 
 const VAZIO = {
   nome: "",
