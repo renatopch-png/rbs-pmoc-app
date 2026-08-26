@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { db } from "../services/firebase"; 
-import { NotificacoesBanner } from "../../components/Notificacoes/NotificacoesManuencao";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../services/firebase";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -67,9 +66,6 @@ export default function Dashboard() {
       <p className="mb-6 text-gray-600">
         RBS Refrigeração Elétrica • Energia Solar • Engenharia Térmica
       </p>
-
-      {/* Banner de Notificações */}
-      <NotificacoesBanner />
 
       {/* Estatísticas */}
       {carregando ? (
