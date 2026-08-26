@@ -12,6 +12,7 @@ import ListaOS from "./pages/OrdemServico/ListaOS";
 import ExecucaoOS from "./pages/OrdemServico/ExecucaoOS";
 import GeradorPMOC from "./pages/Relatorios/GeradorPMOC";
 import GeradorART from "./pages/Relatorios/GeradorART";
+import GeradorContrato from "./pages/Relatorios/GeradorContrato";
 import Agendador from "./pages/Relatorios/Agendador";
 import Relatorios from "./pages/Relatorios/Relatorios";
 
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/ordens-servico/executar/:equipamentoId" element={<Privada><ExecucaoOS /></Privada>} />
         <Route path="/relatorios/pmoc/:osId" element={<Privada><GeradorPMOC /></Privada>} />
         <Route path="/relatorios/art/:osId" element={<Privada><GeradorART /></Privada>} />
+        <Route path="/relatorios/contrato/:clienteId" element={<Privada><GeradorContrato /></Privada>} />
         <Route path="/relatorios" element={<Privada><Relatorios /></Privada>} />
       </Routes>
       <InstallBanner />
