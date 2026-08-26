@@ -12,6 +12,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../services/firebase";
+import QRCode from "qrcode.react";
 
 const TIPOS = [
   "Split Hi-Wall",
@@ -52,6 +53,8 @@ export default function ListaEquipamentos() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [filtroCliente, setFiltroCliente] = useState("");
+  const [qrAberto, setQrAberto] = useState(null);
+  const [linkCopiado, setLinkCopiado] = useState(null);
 
   async function carregar() {
     setCarregando(true);
@@ -97,6 +100,24 @@ export default function ListaEquipamentos() {
     setEditandoId(null);
     setMostrarForm(false);
     setErro("");
+  }
+
+  function linkPublico(equipamentoId) {
+    return `${window.location.origin}/eq/${equipamentoId}`;
+  }
+
+  function toggleQr(equipamentoId) {
+    setQrAberto(qrAberto === equipamentoId ? null : equipamentoId);
+  }
+
+  async function copiarLink(equipamentoId) {
+    try {
+      await navigator.clipboard.writeText(linkPublico(equipamentoId));
+      setLinkCopiado(equipamentoId);
+      setTimeout(() => setLinkCopiado(null), 2000);
+    } catch (e) {
+      window.prompt("Copie o link:", linkPublico(equipamentoId));
+    }
   }
 
   async function salvar() {
@@ -362,12 +383,40 @@ export default function ListaEquipamentos() {
                 Manutenção {eq.periodicidade || "não definida"}
               </p>
 
+              {qrAberto === eq.id && (
+                <div className="mt-4 flex flex-col items-center rounded-lg border border-blue-100 bg-blue-50/50 p-4">
+                  <QRCode
+                    value={linkPublico(eq.id)}
+                    size={140}
+                    level="H"
+                    includeMargin={true}
+                    fgColor="#1e3a8a"
+                    bgColor="#ffffff"
+                  />
+                  <p className="mt-3 text-center text-xs text-gray-600">
+                    Aponte a câmera para abrir a página pública deste equipamento
+                  </p>
+                  <button
+                    onClick={() => copiarLink(eq.id)}
+                    className="mt-2 text-xs font-semibold text-blue-800 hover:underline"
+                  >
+                    {linkCopiado === eq.id ? "Link copiado! ✓" : "🔗 Copiar link"}
+                  </button>
+                </div>
+              )}
+
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
                   onClick={() => navigate(`/ordens-servico/executar/${eq.id}`)}
                   className="rounded-lg bg-blue-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-900"
                 >
                   Executar manutenção
+                </button>
+                <button
+                  onClick={() => toggleQr(eq.id)}
+                  className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800 hover:bg-blue-100"
+                >
+                  📱 {qrAberto === eq.id ? "Ocultar QR" : "QR Code"}
                 </button>
                 <button
                   onClick={() => abrirEdicao(eq)}
