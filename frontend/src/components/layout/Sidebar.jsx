@@ -2,12 +2,12 @@ import { NavLink } from "react-router-dom";
 import { logout } from "../../services/authService";
 
 const links = [
-  { to: "/", label: "Dashboard" },
-  { to: "/clientes", label: "Clientes e Edifícios" },
-  { to: "/equipamentos", label: "Equipamentos" },
-  { to: "/cronograma", label: "Cronograma / Plano" },
-  { to: "/ordens-servico", label: "Ordens de Serviço" },
-  { to: "/relatorios", label: "Relatórios" },
+  { to: "/", label: "Dashboard", icon: "📊" },
+  { to: "/clientes", label: "Clientes e Edifícios", icon: "🏢" },
+  { to: "/equipamentos", label: "Equipamentos", icon: "❄️" },
+  { to: "/cronograma", label: "Cronograma / Plano", icon: "📅" },
+  { to: "/ordens-servico", label: "Ordens de Serviço", icon: "🔧" },
+  { to: "/relatorios", label: "Relatórios", icon: "📈" },
 ];
 
 export default function Sidebar() {
@@ -26,20 +26,22 @@ export default function Sidebar() {
             to={l.to}
             end={l.to === "/"}
             className={({ isActive }) =>
-              `block rounded-lg px-4 py-2 text-sm transition ${
+              `flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition ${
                 isActive ? "bg-rbs-light text-rbs-dark font-semibold" : "hover:bg-white/10"
               }`
             }
           >
-            {l.label}
+            <span className="text-base leading-none">{l.icon}</span>
+            <span>{l.label}</span>
           </NavLink>
         ))}
       </nav>
       <button
         onClick={logout}
-        className="m-3 rounded-lg border border-white/30 px-4 py-2 text-sm hover:bg-white/10"
+        className="m-3 flex items-center justify-center gap-2 rounded-lg border border-white/30 px-4 py-2 text-sm hover:bg-white/10"
       >
-        Sair
+        <span>🚪</span>
+        <span>Sair</span>
       </button>
     </aside>
   );
