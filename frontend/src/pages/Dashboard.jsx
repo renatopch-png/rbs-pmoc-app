@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { db } from "../../services/firebase"; 
+import { db } from "../services/firebase"; 
 import { NotificacoesBanner } from "../../components/Notificacoes/NotificacoesManuencao";
 
 export default function Dashboard() {
