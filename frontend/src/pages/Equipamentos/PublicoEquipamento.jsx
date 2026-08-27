@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { useParams, Link } from "react-router-dom";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import QRCode from "qrcode.react";
 
@@ -8,6 +8,7 @@ export default function PublicoEquipamento() {
   const { equipamentoId } = useParams();
   const [equipamento, setEquipamento] = useState(null);
   const [cliente, setCliente] = useState(null);
+  const [historico, setHistorico] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
@@ -30,6 +31,21 @@ export default function PublicoEquipamento() {
             setCliente(docCli.data());
           }
         }
+
+        // Histórico de manutenções deste equipamento: sem orderBy no
+        // Firestore (evita precisar de índice composto) — ordenamos por
+        // data mais recente aqui mesmo, no navegador.
+        const snapOS = await getDocs(
+          query(collection(db, "ordens_servico"), where("equipamentoId", "==", equipamentoId))
+        );
+        const lista = snapOS.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => {
+            const da = a.dataExecucao?.toMillis ? a.dataExecucao.toMillis() : 0;
+            const db_ = b.dataExecucao?.toMillis ? b.dataExecucao.toMillis() : 0;
+            return db_ - da;
+          });
+        setHistorico(lista);
       } catch (e) {
         setErro("Erro ao carregar dados. " + e.message);
       } finally {
@@ -37,6 +53,12 @@ export default function PublicoEquipamento() {
       }
     })();
   }, [equipamentoId]);
+
+  function formatarData(v) {
+    if (!v) return "—";
+    const d = v.toDate ? v.toDate() : new Date(v);
+    return d.toLocaleDateString("pt-BR");
+  }
 
   function abrirWhatsApp() {
     const url = window.location.href;
@@ -142,6 +164,47 @@ export default function PublicoEquipamento() {
             </div>
           </div>
         )}
+
+        {/* Histórico de Manutenções */}
+        <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            📋 Histórico de Manutenções
+          </h2>
+          {historico.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              Nenhuma manutenção registrada ainda para este equipamento.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {historico.map((os) => {
+                const total = Array.isArray(os.itensChecklist) ? os.itensChecklist.length : 0;
+                const feitos = Array.isArray(os.itensChecklist)
+                  ? os.itensChecklist.filter((it) => it.feito || it.concluido || it.checked).length
+                  : 0;
+                return (
+                  <Link
+                    key={os.id}
+                    to={`/relatorio/${os.id}`}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm transition hover:border-blue-300 hover:bg-blue-50"
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {formatarData(os.dataExecucao)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Técnico: {os.tecnicoNome || "—"}
+                        {total > 0 ? ` • ${feitos}/${total} itens concluídos` : ""}
+                      </p>
+                    </div>
+                    <span className="text-xs font-semibold text-blue-800">
+                      Ver relatório PMOC →
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* QR Code + WhatsApp */}
         <div className="grid gap-6 sm:grid-cols-2">
