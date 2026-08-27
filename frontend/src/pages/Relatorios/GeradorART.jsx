@@ -4,9 +4,6 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import html2pdf from "html2pdf.js";
 
-const LOGOMARCA_URL =
-  "https://firebasestorage.googleapis.com/v0/b/rbs-pmoc.firebasestorage.app/o/Screenshot_20260318_065706_WhatsApp.jpg?alt=media&token=ad4445f7-72db-426c-ab81-a2bf8435fc86";
-
 const CNPJ_RBS = "33.632.222/0001-86";
 const ENDERECO_RBS = "Rua Capitão Ferreira, 86 - Rio de Janeiro";
 const TELEFONE_RBS = "(21) 98765-4321";
@@ -120,22 +117,21 @@ export default function GeradorART() {
             lineHeight: "1.6",
           }}
         >
-          {/* Header com logomarca */}
+          {/* Header */}
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              textAlign: "center",
               marginBottom: "24px",
               paddingBottom: "20px",
               borderBottom: "2px solid #1e3a8a",
             }}
           >
-            <img
-              src={LOGOMARCA_URL}
-              alt="Logo RBS"
-              style={{ height: "100px", maxWidth: "150px" }}
-            />
+            <div style={{ fontSize: "20px", fontWeight: "bold", color: "#1e3a8a" }}>
+              RBS Refrigeração Elétrica
+            </div>
+            <div style={{ fontSize: "11px", color: "#666", marginTop: "2px" }}>
+              Engenharia Térmica • Energia Solar
+            </div>
           </div>
 
           {/* Título */}
