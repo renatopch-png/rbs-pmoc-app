@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db, storage, auth } from "../../services/firebase";
 import {
@@ -13,7 +13,11 @@ export default function ExecucaoOS() {
   const [equipamento, setEquipamento] = useState(null);
   const [itens, setItens] = useState([]);
   const [observacoes, setObservacoes] = useState("");
-  const [fotos, setFotos] = useState([]);
+  // Fotos separadas em "antes" e "depois" do serviço, em vez de uma única
+  // lista de evidência — assim o relatório mostra a comparação, como nos
+  // PDFs de referência.
+  const [fotosAntes, setFotosAntes] = useState([]);
+  const [fotosDepois, setFotosDepois] = useState([]);
   // Distingue manutenção preventiva (agendada, sem reclamação prévia) de
   // corretiva/chamado (o cliente relatou um problema e pediu atendimento).
   // Nos PDFs de referência esses dois tipos de registro aparecem separados
@@ -25,6 +29,12 @@ export default function ExecucaoOS() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(true);
+
+  // Assinatura digital do cliente, capturada na tela (canvas), sem
+  // depender de nenhuma biblioteca externa — só eventos de ponteiro.
+  const canvasRef = useRef(null);
+  const desenhandoRef = useRef(false);
+  const [assinaturaVazia, setAssinaturaVazia] = useState(true);
 
   useEffect(() => {
     async function carregar() {
@@ -51,21 +61,84 @@ export default function ExecucaoOS() {
     );
   }
 
-  function handleFotos(e) {
-    setFotos(Array.from(e.target.files));
+  function handleFotosAntes(e) {
+    setFotosAntes(Array.from(e.target.files));
+  }
+
+  function handleFotosDepois(e) {
+    setFotosDepois(Array.from(e.target.files));
+  }
+
+  // --- Assinatura no canvas ---
+  function posicaoNoCanvas(e) {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: ((e.clientX - rect.left) * canvas.width) / rect.width,
+      y: ((e.clientY - rect.top) * canvas.height) / rect.height,
+    };
+  }
+
+  function iniciarTraco(e) {
+    desenhandoRef.current = true;
+    const ctx = canvasRef.current.getContext("2d");
+    const { x, y } = posicaoNoCanvas(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  }
+
+  function desenharTraco(e) {
+    if (!desenhandoRef.current) return;
+    const ctx = canvasRef.current.getContext("2d");
+    const { x, y } = posicaoNoCanvas(e);
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#1e3a8a";
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    if (assinaturaVazia) setAssinaturaVazia(false);
+  }
+
+  function pararTraco() {
+    desenhandoRef.current = false;
+  }
+
+  function limparAssinatura() {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setAssinaturaVazia(true);
+  }
+
+  async function uploadFotos(lista, subpasta) {
+    const urls = [];
+    for (const foto of lista) {
+      const caminho = `os_fotos/${subpasta}/${equipamentoId}/${Date.now()}_${foto.name}`;
+      const storageRef = ref(storage, caminho);
+      await uploadBytes(storageRef, foto);
+      urls.push(await getDownloadURL(storageRef));
+    }
+    return urls;
   }
 
   async function salvar() {
     setSalvando(true);
     setErro("");
     try {
-      const urlsFotos = [];
-      for (const foto of fotos) {
-        const caminho = `os_fotos/${equipamentoId}/${Date.now()}_${foto.name}`;
-        const storageRef = ref(storage, caminho);
-        await uploadBytes(storageRef, foto);
-        const url = await getDownloadURL(storageRef);
-        urlsFotos.push(url);
+      const urlsFotosAntes = await uploadFotos(fotosAntes, "antes");
+      const urlsFotosDepois = await uploadFotos(fotosDepois, "depois");
+
+      // Assinatura do cliente: só envia se algo foi desenhado no canvas.
+      let assinaturaClienteUrl = "";
+      if (!assinaturaVazia) {
+        const canvas = canvasRef.current;
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (blob) {
+          const caminho = `os_assinaturas/${equipamentoId}/${Date.now()}.png`;
+          const storageRef = ref(storage, caminho);
+          await uploadBytes(storageRef, blob);
+          assinaturaClienteUrl = await getDownloadURL(storageRef);
+        }
       }
 
       // Busca o nome do cliente (se o equipamento tiver um clienteId
@@ -111,7 +184,10 @@ export default function ExecucaoOS() {
         descricaoProblema: tipoAtendimento === "Corretiva" ? descricaoProblema : "",
         itensChecklist: itens,
         observacoes,
-        fotos: urlsFotos,
+        // Fotos antes/depois do serviço e assinatura digital do cliente.
+        fotosAntes: urlsFotosAntes,
+        fotosDepois: urlsFotosDepois,
+        assinaturaClienteUrl,
         tecnicoUid: auth.currentUser?.uid || null,
         tecnicoNome: auth.currentUser?.displayName || "",
         dataExecucao: serverTimestamp(),
@@ -246,16 +322,18 @@ export default function ExecucaoOS() {
       </div>
 
       <div className="bg-white rounded-xl shadow p-5 mb-4">
-        <h2 className="font-semibold mb-3">Fotos de evidência</h2>
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          capture="environment"
-          onChange={handleFotos}
-        />
-        {fotos.length > 0 && (
-          <p className="text-xs text-gray-500 mt-2">{fotos.length} foto(s) selecionada(s)</p>
+        <h2 className="font-semibold mb-3">Fotos — Antes do serviço</h2>
+        <input type="file" accept="image/*" multiple capture="environment" onChange={handleFotosAntes} />
+        {fotosAntes.length > 0 && (
+          <p className="text-xs text-gray-500 mt-2">{fotosAntes.length} foto(s) selecionada(s)</p>
+        )}
+      </div>
+
+      <div className="bg-white rounded-xl shadow p-5 mb-4">
+        <h2 className="font-semibold mb-3">Fotos — Depois do serviço</h2>
+        <input type="file" accept="image/*" multiple capture="environment" onChange={handleFotosDepois} />
+        {fotosDepois.length > 0 && (
+          <p className="text-xs text-gray-500 mt-2">{fotosDepois.length} foto(s) selecionada(s)</p>
         )}
       </div>
 
@@ -267,6 +345,39 @@ export default function ExecucaoOS() {
           value={observacoes}
           onChange={(e) => setObservacoes(e.target.value)}
           placeholder="Alguma observação sobre o equipamento ou serviço executado..."
+        />
+      </div>
+
+      <div className="bg-white rounded-xl shadow p-5 mb-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-semibold">Assinatura do cliente (opcional)</h2>
+          <button
+            type="button"
+            onClick={limparAssinatura}
+            className="text-xs font-semibold text-gray-500 hover:text-gray-700"
+          >
+            Limpar
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 mb-2">
+          Peça para o cliente assinar com o dedo ou mouse na área abaixo, confirmando o serviço executado.
+        </p>
+        <canvas
+          ref={canvasRef}
+          width={600}
+          height={150}
+          style={{
+            width: "100%",
+            height: "150px",
+            touchAction: "none",
+            border: "1px dashed #ccc",
+            borderRadius: "8px",
+            background: "#fff",
+          }}
+          onPointerDown={iniciarTraco}
+          onPointerMove={desenharTraco}
+          onPointerUp={pararTraco}
+          onPointerLeave={pararTraco}
         />
       </div>
 
