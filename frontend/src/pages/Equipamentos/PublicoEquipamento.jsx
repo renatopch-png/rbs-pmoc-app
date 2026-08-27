@@ -147,6 +147,21 @@ export default function PublicoEquipamento() {
                 <span className="text-gray-600">{equipamento.local}</span>
               </div>
             )}
+            {equipamento.areaClimatizada && (
+              <div className="flex gap-3">
+                <span className="font-medium text-gray-700">Área climatizada:</span>
+                <span className="text-gray-600">{equipamento.areaClimatizada} m²</span>
+              </div>
+            )}
+            {(equipamento.ocupanteFixo || equipamento.ocupanteFlutuante) && (
+              <div className="flex gap-3">
+                <span className="font-medium text-gray-700">Ocupantes:</span>
+                <span className="text-gray-600">
+                  {equipamento.ocupanteFixo || "0"} fixo(s)
+                  {equipamento.ocupanteFlutuante ? ` + ${equipamento.ocupanteFlutuante} flutuante(s)` : ""}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
