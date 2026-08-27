@@ -27,6 +27,11 @@ const VAZIO = {
   numeroSerie: "",
   clienteId: "",
   periodicidade: "Mensal",
+  // Dados do ambiente exigidos pela Anvisa (RE-9) para cálculo de
+  // renovação de ar — vistos nos relatórios PMOC de referência.
+  ocupanteFixo: "",
+  ocupanteFlutuante: "",
+  areaClimatizada: "",
 };
 
 export default function ListaEquipamentos() {
@@ -129,6 +134,9 @@ export default function ListaEquipamentos() {
         numeroSerie: form.numeroSerie.trim(),
         clienteId: form.clienteId,
         periodicidade: form.periodicidade,
+        ocupanteFixo: form.ocupanteFixo.trim(),
+        ocupanteFlutuante: form.ocupanteFlutuante.trim(),
+        areaClimatizada: form.areaClimatizada.trim(),
       };
       if (editandoId) {
         await updateDoc(doc(db, "equipamentos", editandoId), {
@@ -297,6 +305,49 @@ export default function ListaEquipamentos() {
                 <option>Semestral</option>
                 <option>Anual</option>
               </select>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className={label}>
+                Dados do ambiente (opcional — usados no cálculo de renovação de ar da Anvisa RE-9)
+              </label>
+            </div>
+
+            <div>
+              <label className={label}>Ocupantes fixos</label>
+              <input
+                className={input}
+                type="number"
+                min="0"
+                placeholder="Ex.: 8"
+                value={form.ocupanteFixo}
+                onChange={(e) => setForm({ ...form, ocupanteFixo: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className={label}>Ocupantes flutuantes</label>
+              <input
+                className={input}
+                type="number"
+                min="0"
+                placeholder="Ex.: 2"
+                value={form.ocupanteFlutuante}
+                onChange={(e) => setForm({ ...form, ocupanteFlutuante: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className={label}>Área climatizada (m²)</label>
+              <input
+                className={input}
+                type="number"
+                min="0"
+                step="0.1"
+                placeholder="Ex.: 32.5"
+                value={form.areaClimatizada}
+                onChange={(e) => setForm({ ...form, areaClimatizada: e.target.value })}
+              />
             </div>
           </div>
 
