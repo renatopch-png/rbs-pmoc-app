@@ -270,6 +270,9 @@ export default function PublicoEquipamento() {
           <p className="mt-1 text-xs text-gray-500">
             CNPJ: {DADOS_RBS.cnpj} &nbsp;•&nbsp; 📞 {DADOS_RBS.telefoneFmt}
           </p>
+          <p className="mt-1 text-xs text-gray-500">
+            Responsável Técnico: {DADOS_RBS.responsavelTecnico} • {DADOS_RBS.registroTecnico}
+          </p>
           <p className="mt-1 text-xs text-gray-400">
             Consultado em {new Date().toLocaleString("pt-BR")}
           </p>
