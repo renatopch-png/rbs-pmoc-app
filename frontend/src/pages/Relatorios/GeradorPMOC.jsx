@@ -352,8 +352,9 @@ export default function GeradorPMOC() {
             </div>
           )}
 
-          {/* Fotos */}
-          {Array.isArray(ordem.fotos) && ordem.fotos.length > 0 && (
+          {/* Fotos antes/depois (registros novos) */}
+          {(Array.isArray(ordem.fotosAntes) && ordem.fotosAntes.length > 0) ||
+          (Array.isArray(ordem.fotosDepois) && ordem.fotosDepois.length > 0) ? (
             <div
               style={{
                 marginBottom: "20px",
@@ -363,25 +364,89 @@ export default function GeradorPMOC() {
               }}
             >
               <h2 style={{ fontSize: "14px", fontWeight: "bold", margin: "0 0 10px 0" }}>
-                📷 EVIDÊNCIA FOTOGRÁFICA ({ordem.fotos.length})
+                📷 EVIDÊNCIA FOTOGRÁFICA — ANTES E DEPOIS
               </h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-                {ordem.fotos.map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt={`Foto ${i + 1}`}
-                    style={{
-                      width: "100%",
-                      height: "120px",
-                      objectFit: "cover",
-                      borderRadius: "4px",
-                      border: "1px solid #e0e0e0",
-                    }}
-                  />
-                ))}
-              </div>
+              {Array.isArray(ordem.fotosAntes) && ordem.fotosAntes.length > 0 && (
+                <div style={{ marginBottom: "10px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: "bold", margin: "0 0 6px 0" }}>
+                    Antes ({ordem.fotosAntes.length})
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+                    {ordem.fotosAntes.map((url, i) => (
+                      <img
+                        key={i}
+                        src={url}
+                        alt={`Antes ${i + 1}`}
+                        style={{
+                          width: "100%",
+                          height: "120px",
+                          objectFit: "cover",
+                          borderRadius: "4px",
+                          border: "1px solid #e0e0e0",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {Array.isArray(ordem.fotosDepois) && ordem.fotosDepois.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", fontWeight: "bold", margin: "0 0 6px 0" }}>
+                    Depois ({ordem.fotosDepois.length})
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+                    {ordem.fotosDepois.map((url, i) => (
+                      <img
+                        key={i}
+                        src={url}
+                        alt={`Depois ${i + 1}`}
+                        style={{
+                          width: "100%",
+                          height: "120px",
+                          objectFit: "cover",
+                          borderRadius: "4px",
+                          border: "1px solid #e0e0e0",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+          ) : (
+            // Compatibilidade com OS antigas, que salvavam tudo num único
+            // campo "fotos" (antes de existir a separação antes/depois).
+            Array.isArray(ordem.fotos) &&
+            ordem.fotos.length > 0 && (
+              <div
+                style={{
+                  marginBottom: "20px",
+                  padding: "15px",
+                  backgroundColor: "#f5f3ff",
+                  borderLeft: "4px solid #8b5cf6",
+                }}
+              >
+                <h2 style={{ fontSize: "14px", fontWeight: "bold", margin: "0 0 10px 0" }}>
+                  📷 EVIDÊNCIA FOTOGRÁFICA ({ordem.fotos.length})
+                </h2>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+                  {ordem.fotos.map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt={`Foto ${i + 1}`}
+                      style={{
+                        width: "100%",
+                        height: "120px",
+                        objectFit: "cover",
+                        borderRadius: "4px",
+                        border: "1px solid #e0e0e0",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
           )}
 
           {/* Assinatura e Data */}
@@ -403,10 +468,17 @@ export default function GeradorPMOC() {
               <div>Assinatura do Técnico</div>
             </div>
             <div style={{ textAlign: "center", fontSize: "11px" }}>
-              <div style={{ height: "40px", marginBottom: "8px" }}>
-                <div style={{ borderTop: "1px solid #333" }}>
-                  <strong>Cliente</strong>
-                </div>
+              {ordem.assinaturaClienteUrl ? (
+                <img
+                  src={ordem.assinaturaClienteUrl}
+                  alt="Assinatura do cliente"
+                  style={{ height: "40px", marginBottom: "8px", objectFit: "contain" }}
+                />
+              ) : (
+                <div style={{ height: "40px", marginBottom: "8px" }} />
+              )}
+              <div style={{ borderTop: "1px solid #333", paddingTop: "4px" }}>
+                <strong>Cliente</strong>
               </div>
               <div>Assinatura do Cliente</div>
             </div>
