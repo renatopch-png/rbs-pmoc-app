@@ -11,6 +11,7 @@ import Cronograma from "./pages/Cronograma";
 import ListaOS from "./pages/OrdemServico/ListaOS";
 import ExecucaoOS from "./pages/OrdemServico/ExecucaoOS";
 import GeradorPMOC from "./pages/Relatorios/GeradorPMOC";
+import RelatorioPublico from "./pages/Relatorios/RelatorioPublico";
 import GeradorART from "./pages/Relatorios/GeradorART";
 import GeradorContrato from "./pages/Relatorios/GeradorContrato";
 import Agendador from "./pages/Relatorios/Agendador";
@@ -26,7 +27,8 @@ export default function App() {
       <Routes>
         {/* Públicas (sem autenticação) */}
         <Route path="/eq/:equipamentoId" element={<PublicoEquipamento />} />
-        
+        <Route path="/relatorio/:osId" element={<RelatorioPublico />} />
+
         {/* Autenticadas */}
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Privada><Dashboard /></Privada>} />
