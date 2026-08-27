@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
+import { DADOS_RBS } from "../../services/ServicoWhatsApp";
 import html2pdf from "html2pdf.js";
 
 export default function GeradorPMOC() {
@@ -386,6 +387,9 @@ export default function GeradorPMOC() {
           >
             <p style={{ margin: "4px 0" }}>
               <strong>RBS Refrigeração Elétrica • Engenharia Térmica • Energia Solar</strong>
+            </p>
+            <p style={{ margin: "4px 0" }}>
+              Responsável Técnico: {DADOS_RBS.responsavelTecnico} • {DADOS_RBS.registroTecnico}
             </p>
             <p style={{ margin: "4px 0" }}>
               Gerado em {new Date().toLocaleString("pt-BR")} • Sistema PMOC Web
