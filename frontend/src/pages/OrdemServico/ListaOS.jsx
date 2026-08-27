@@ -151,7 +151,46 @@ export default function ListaOS() {
                     </div>
                   )}
 
-                  {Array.isArray(os.fotos) && os.fotos.length > 0 && (
+                  {Array.isArray(os.fotosAntes) && os.fotosAntes.length > 0 && (
+                    <div className="mb-4">
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Fotos — Antes ({os.fotosAntes.length})
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {os.fotosAntes.map((url, i) => (
+                          <a key={i} href={url} target="_blank" rel="noreferrer">
+                            <img
+                              src={url}
+                              alt={`Antes ${i + 1}`}
+                              className="h-24 w-24 rounded-lg border border-gray-200 object-cover"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {Array.isArray(os.fotosDepois) && os.fotosDepois.length > 0 && (
+                    <div className="mb-4">
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Fotos — Depois ({os.fotosDepois.length})
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {os.fotosDepois.map((url, i) => (
+                          <a key={i} href={url} target="_blank" rel="noreferrer">
+                            <img
+                              src={url}
+                              alt={`Depois ${i + 1}`}
+                              className="h-24 w-24 rounded-lg border border-gray-200 object-cover"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Compatibilidade com OS antigas (campo único "fotos") */}
+                  {!os.fotosAntes && !os.fotosDepois && Array.isArray(os.fotos) && os.fotos.length > 0 && (
                     <div className="mb-4">
                       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Fotos ({os.fotos.length})
@@ -167,6 +206,19 @@ export default function ListaOS() {
                           </a>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {os.assinaturaClienteUrl && (
+                    <div className="mb-4">
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Assinatura do cliente
+                      </h3>
+                      <img
+                        src={os.assinaturaClienteUrl}
+                        alt="Assinatura do cliente"
+                        className="h-16 rounded-lg border border-gray-200 bg-white object-contain px-2"
+                      />
                     </div>
                   )}
 
