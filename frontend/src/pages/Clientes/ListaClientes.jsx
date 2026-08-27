@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { db } from "../../services/firebase";
 import {
   collection, addDoc, getDocs, deleteDoc, doc,
@@ -139,6 +140,12 @@ export default function ListaClientes() {
               </p>
             </div>
             <div className="flex gap-2">
+              <Link
+                to={`/relatorios/pmoc-consolidado/${c.id}`}
+                className="text-xs text-blue-800 font-semibold"
+              >
+                📄 PMOC Consolidado
+              </Link>
               <button
                 onClick={() => abrirEdicao(c)}
                 className="text-xs text-rbs font-semibold"
