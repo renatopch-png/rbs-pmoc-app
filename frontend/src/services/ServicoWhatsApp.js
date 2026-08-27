@@ -134,4 +134,9 @@ export const DADOS_RBS = {
   telefone: "5521987654321", // Com código país, sem formatação
   telefoneFmt: "(21) 98765-4321",
   whatsappLink: "https://wa.me/5521987654321",
+  // Responsável técnico, exibido nos relatórios (PMOC/ART/Contrato) junto
+  // ao CNPJ — é o registro que dá respaldo legal ao serviço prestado.
+  responsavelTecnico: "Renato Batista Soutinho",
+  tituloTecnico: "Técnico em Eletromecânica",
+  registroTecnico: "CRT-RJ Nº 08482058711",
 };
