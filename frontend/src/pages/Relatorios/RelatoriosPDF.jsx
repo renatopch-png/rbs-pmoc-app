@@ -3,9 +3,6 @@ import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import html2pdf from "html2pdf.js";
 
-const LOGOMARCA_URL =
-  "https://firebasestorage.googleapis.com/v0/b/rbs-pmoc.firebasestorage.app/o/Screenshot_20260318_065706_WhatsApp.jpg?alt=media&token=ad4445f7-72db-426c-ab81-a2bf8435fc86";
-
 export default function RelatoriosPDF() {
   const [ordens, setOrdens] = useState([]);
   const [clientes, setClientes] = useState([]);
@@ -245,7 +242,10 @@ export default function RelatoriosPDF() {
         <div id="relatorio-pdf-conteudo" className="bg-white">
           {/* Cabeçalho para o PDF (fica escondido visualmente mas entra na exportação) */}
           <div className="mb-4 flex items-center justify-between border-b-2 border-blue-900 pb-4">
-            <img src={LOGOMARCA_URL} alt="Logo RBS" style={{ height: "60px" }} />
+            <div>
+              <div className="text-lg font-bold text-blue-900">RBS Refrigeração Elétrica</div>
+              <div className="text-xs text-gray-500">Engenharia Térmica • Energia Solar</div>
+            </div>
             <div className="text-right">
               <h2 className="text-lg font-bold text-blue-900">RELATÓRIO CONSOLIDADO DE MANUTENÇÃO</h2>
               <p className="text-xs text-gray-500">
