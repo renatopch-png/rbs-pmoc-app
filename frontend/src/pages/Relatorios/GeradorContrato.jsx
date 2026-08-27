@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
+import { DADOS_RBS } from "../../services/ServicoWhatsApp";
 import html2pdf from "html2pdf.js";
 
 const CNPJ_RBS = "33.632.222/0001-86";
@@ -175,6 +176,10 @@ export default function GeradorContrato() {
             <div>CNPJ: {CNPJ_RBS}</div>
             <div>Endereço: {ENDERECO_RBS}</div>
             <div>Telefone: {TELEFONE_RBS}</div>
+            <div>
+              Responsável Técnico: {DADOS_RBS.responsavelTecnico} — {DADOS_RBS.tituloTecnico} —{" "}
+              {DADOS_RBS.registroTecnico}
+            </div>
           </div>
 
           {/* Objeto do Contrato */}
