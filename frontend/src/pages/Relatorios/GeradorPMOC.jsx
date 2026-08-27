@@ -237,6 +237,28 @@ export default function GeradorPMOC() {
                 <strong>Nº de série:</strong> {ordem.numeroSerie}
               </div>
             )}
+            {(ordem.ocupanteFixo || ordem.ocupanteFlutuante || ordem.areaClimatizada) && (
+              <div
+                style={{
+                  marginTop: "10px",
+                  paddingTop: "10px",
+                  borderTop: "1px dashed #d97757",
+                  fontSize: "12px",
+                }}
+              >
+                {ordem.areaClimatizada && (
+                  <div style={{ margin: "4px 0" }}>
+                    <strong>Área climatizada:</strong> {ordem.areaClimatizada} m²
+                  </div>
+                )}
+                {(ordem.ocupanteFixo || ordem.ocupanteFlutuante) && (
+                  <div style={{ margin: "4px 0" }}>
+                    <strong>Ocupantes:</strong> {ordem.ocupanteFixo || "0"} fixo(s)
+                    {ordem.ocupanteFlutuante ? ` + ${ordem.ocupanteFlutuante} flutuante(s)` : ""}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Checklist */}
