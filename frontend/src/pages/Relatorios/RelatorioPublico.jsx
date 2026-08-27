@@ -156,7 +156,45 @@ export default function RelatorioPublico() {
             <div style={{ fontSize: "12px", color: "#666" }}>
               Técnico: <strong>{ordem.tecnicoNome || "—"}</strong>
             </div>
+            {ordem.tipoAtendimento && (
+              <div style={{ fontSize: "12px", color: "#666" }}>
+                Tipo de atendimento:{" "}
+                <strong>
+                  {ordem.tipoAtendimento === "Corretiva"
+                    ? "🛠️ Corretiva (chamado do cliente)"
+                    : "🗓️ Preventiva (agendada)"}
+                </strong>
+              </div>
+            )}
           </div>
+
+          {/* Dados do chamado (só em atendimentos corretivos) */}
+          {ordem.tipoAtendimento === "Corretiva" &&
+            (ordem.dataAbertura || ordem.descricaoProblema) && (
+              <div
+                style={{
+                  marginBottom: "20px",
+                  padding: "15px",
+                  backgroundColor: "#fff7ed",
+                  borderLeft: "4px solid #c2410c",
+                }}
+              >
+                <h2 style={{ fontSize: "14px", fontWeight: "bold", margin: "0 0 10px 0" }}>
+                  🛠️ DADOS DO CHAMADO
+                </h2>
+                {ordem.dataAbertura && (
+                  <div style={{ fontSize: "12px", margin: "4px 0" }}>
+                    <strong>Aberto em:</strong>{" "}
+                    {new Date(ordem.dataAbertura + "T00:00:00").toLocaleDateString("pt-BR")}
+                  </div>
+                )}
+                {ordem.descricaoProblema && (
+                  <div style={{ fontSize: "12px", margin: "4px 0", whiteSpace: "pre-wrap" }}>
+                    <strong>Problema relatado:</strong> {ordem.descricaoProblema}
+                  </div>
+                )}
+              </div>
+            )}
 
           {/* Dados do Cliente */}
           {cliente && (
