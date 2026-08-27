@@ -14,6 +14,14 @@ export default function ExecucaoOS() {
   const [itens, setItens] = useState([]);
   const [observacoes, setObservacoes] = useState("");
   const [fotos, setFotos] = useState([]);
+  // Distingue manutenção preventiva (agendada, sem reclamação prévia) de
+  // corretiva/chamado (o cliente relatou um problema e pediu atendimento).
+  // Nos PDFs de referência esses dois tipos de registro aparecem separados
+  // (PMOC/Preventiva vs. OS de chamado) — aqui usamos o mesmo formulário de
+  // execução para os dois, mas guardamos os campos extras do chamado.
+  const [tipoAtendimento, setTipoAtendimento] = useState("Preventiva");
+  const [dataAbertura, setDataAbertura] = useState("");
+  const [descricaoProblema, setDescricaoProblema] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(true);
@@ -96,6 +104,11 @@ export default function ExecucaoOS() {
         ocupanteFixo: equipamento?.ocupanteFixo || "",
         ocupanteFlutuante: equipamento?.ocupanteFlutuante || "",
         areaClimatizada: equipamento?.areaClimatizada || "",
+        // Tipo de atendimento e dados do chamado (quando corretiva) — ver
+        // comentário acima, junto ao estado tipoAtendimento.
+        tipoAtendimento,
+        dataAbertura: tipoAtendimento === "Corretiva" ? dataAbertura : "",
+        descricaoProblema: tipoAtendimento === "Corretiva" ? descricaoProblema : "",
         itensChecklist: itens,
         observacoes,
         fotos: urlsFotos,
@@ -130,6 +143,62 @@ export default function ExecucaoOS() {
           {equipamento.nome} — {equipamento.tipo || ""} {equipamento.local ? `— ${equipamento.local}` : ""}
         </p>
       )}
+
+      <div className="bg-white rounded-xl shadow p-5 mb-4">
+        <h2 className="font-semibold mb-3">Tipo de atendimento</h2>
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => setTipoAtendimento("Preventiva")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+              tipoAtendimento === "Preventiva"
+                ? "bg-rbs text-white"
+                : "border border-gray-300 text-gray-700"
+            }`}
+          >
+            🗓️ Preventiva (agendada)
+          </button>
+          <button
+            type="button"
+            onClick={() => setTipoAtendimento("Corretiva")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+              tipoAtendimento === "Corretiva"
+                ? "bg-orange-700 text-white"
+                : "border border-gray-300 text-gray-700"
+            }`}
+          >
+            🛠️ Corretiva (chamado do cliente)
+          </button>
+        </div>
+
+        {tipoAtendimento === "Corretiva" && (
+          <div className="space-y-3 border-t border-gray-100 pt-3">
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase text-gray-600">
+                Data em que o chamado foi aberto
+              </label>
+              <input
+                type="date"
+                className="w-full border rounded-lg p-2 text-sm"
+                value={dataAbertura}
+                onChange={(e) => setDataAbertura(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase text-gray-600">
+                Problema relatado pelo cliente
+              </label>
+              <textarea
+                className="w-full border rounded-lg p-2 text-sm"
+                rows={2}
+                value={descricaoProblema}
+                onChange={(e) => setDescricaoProblema(e.target.value)}
+                placeholder="Ex.: Ar-condicionado não está gelando, cliente reportou ruído estranho..."
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="bg-white rounded-xl shadow p-5 mb-4">
         <div className="mb-3 flex items-center justify-between">
