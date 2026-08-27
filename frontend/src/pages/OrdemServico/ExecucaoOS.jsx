@@ -60,9 +60,37 @@ export default function ExecucaoOS() {
         urlsFotos.push(url);
       }
 
+      // Busca o nome do cliente (se o equipamento tiver um clienteId
+      // vinculado) para gravar junto na OS — assim o relatório PMOC
+      // não depende de o técnico digitar nada, e a lista de Relatórios
+      // também consegue mostrar o cliente sem precisar de outra consulta.
+      let clienteNome = "";
+      if (equipamento?.clienteId) {
+        try {
+          const clienteSnap = await getDoc(doc(db, "clientes", equipamento.clienteId));
+          if (clienteSnap.exists()) {
+            clienteNome = clienteSnap.data()?.nome || "";
+          }
+        } catch (e) {
+          console.error("Não foi possível buscar o cliente:", e);
+        }
+      }
+
       await addDoc(collection(db, "ordens_servico"), {
         equipamentoId,
         equipamentoNome: equipamento?.nome || "",
+        // Dados do equipamento copiados no momento da execução, para que
+        // o relatório PMOC (GeradorPMOC.jsx) e a lista de Relatórios
+        // consigam exibi-los sem depender de o equipamento continuar
+        // existindo/inalterado depois.
+        tipo: equipamento?.tipo || "",
+        marca: equipamento?.marca || "",
+        modelo: equipamento?.modelo || "",
+        capacidade: equipamento?.capacidade || "",
+        local: equipamento?.local || "",
+        numeroSerie: equipamento?.numeroSerie || "",
+        clienteId: equipamento?.clienteId || null,
+        clienteNome,
         itensChecklist: itens,
         observacoes,
         fotos: urlsFotos,
