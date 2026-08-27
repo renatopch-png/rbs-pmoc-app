@@ -81,6 +81,17 @@ export default function ListaOS() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {os.tipoAtendimento && (
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        os.tipoAtendimento === "Corretiva"
+                          ? "bg-orange-50 text-orange-800"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {os.tipoAtendimento === "Corretiva" ? "🛠️ Corretiva" : "🗓️ Preventiva"}
+                    </span>
+                  )}
                   <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800">
                     {resumoChecklist(os.itensChecklist)}
                   </span>
@@ -90,6 +101,24 @@ export default function ListaOS() {
 
               {aberta === os.id && (
                 <div className="border-t border-gray-100 p-4">
+                  {os.tipoAtendimento === "Corretiva" && (os.dataAbertura || os.descricaoProblema) && (
+                    <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 p-3">
+                      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-orange-800">
+                        🛠️ Dados do chamado
+                      </h3>
+                      {os.dataAbertura && (
+                        <p className="text-sm text-orange-900">
+                          Aberto em: {new Date(os.dataAbertura + "T00:00:00").toLocaleDateString("pt-BR")}
+                        </p>
+                      )}
+                      {os.descricaoProblema && (
+                        <p className="mt-1 text-sm text-orange-900">
+                          Problema relatado: {os.descricaoProblema}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {Array.isArray(os.itensChecklist) && os.itensChecklist.length > 0 && (
                     <div className="mb-4">
                       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
