@@ -348,6 +348,9 @@ export default function RelatorioPublico() {
               CNPJ: {DADOS_RBS.cnpj} • Tel: {DADOS_RBS.telefoneFmt}
             </p>
             <p style={{ margin: "4px 0" }}>
+              Responsável Técnico: {DADOS_RBS.responsavelTecnico} • {DADOS_RBS.registroTecnico}
+            </p>
+            <p style={{ margin: "4px 0" }}>
               Gerado em {new Date().toLocaleString("pt-BR")} • Sistema PMOC Web
             </p>
           </div>
