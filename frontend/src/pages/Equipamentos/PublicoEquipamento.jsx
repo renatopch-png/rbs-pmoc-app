@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../services/firebase";
+import { DADOS_RBS } from "../../services/ServicoWhatsApp";
 import QRCode from "qrcode.react";
 
 export default function PublicoEquipamento() {
@@ -246,10 +247,13 @@ export default function PublicoEquipamento() {
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer com dados da empresa (nome, CNPJ, telefone) */}
         <div className="mt-8 border-t border-gray-200 pt-6 text-center">
           <p className="text-xs text-gray-500">
-            <strong>RBS Refrigeração Elétrica</strong> • Engenharia Térmica e Energia Solar
+            <strong>{DADOS_RBS.empresa}</strong> • {DADOS_RBS.slogan}
+          </p>
+          <p className="mt-1 text-xs text-gray-500">
+            CNPJ: {DADOS_RBS.cnpj} &nbsp;•&nbsp; 📞 {DADOS_RBS.telefoneFmt}
           </p>
           <p className="mt-1 text-xs text-gray-400">
             Consultado em {new Date().toLocaleString("pt-BR")}
