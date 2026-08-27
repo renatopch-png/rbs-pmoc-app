@@ -91,6 +91,11 @@ export default function ExecucaoOS() {
         numeroSerie: equipamento?.numeroSerie || "",
         clienteId: equipamento?.clienteId || null,
         clienteNome,
+        // Dados do ambiente (ocupantes e área climatizada), usados no
+        // relatório PMOC para o cálculo de renovação de ar (Anvisa RE-9).
+        ocupanteFixo: equipamento?.ocupanteFixo || "",
+        ocupanteFlutuante: equipamento?.ocupanteFlutuante || "",
+        areaClimatizada: equipamento?.areaClimatizada || "",
         itensChecklist: itens,
         observacoes,
         fotos: urlsFotos,
