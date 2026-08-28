@@ -7,7 +7,6 @@ import Dashboard from "./pages/Dashboard";
 import ListaClientes from "./pages/Clientes/ListaClientes";
 import ListaEquipamentos from "./pages/Equipamentos/ListaEquipamentos";
 import PublicoEquipamento from "./pages/Equipamentos/PublicoEquipamento";
-import Cronograma from "./pages/Cronograma";
 import ListaOS from "./pages/OrdemServico/ListaOS";
 import ExecucaoOS from "./pages/OrdemServico/ExecucaoOS";
 import GeradorPMOC from "./pages/Relatorios/GeradorPMOC";
