@@ -2,7 +2,12 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     match /{allPaths=**} {
-      allow read, write: if request.auth != null
+      // Leitura pública: as fotos "antes/depois" e a assinatura do cliente
+      // aparecem no relatório PMOC público (/relatorio/:osId) e na página
+      // do equipamento (/eq/:id), acessadas sem login por quem escaneia o
+      // QR Code. Sem isso, as imagens apareciam quebradas para o cliente.
+      allow read: if true;
+      allow write: if request.auth != null
         && firestore.exists(/databases/(default)/documents/usuarios_autorizados/$(request.auth.uid));
     }
   }
