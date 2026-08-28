@@ -4,7 +4,7 @@
  */
 
 // Configuração do WhatsApp Business API
-const WHATSAPP_API_URL = "https://graph.instagram.com/v18.0";
+const WHATSAPP_API_URL = "https://graph.facebook.com/v18.0"; // URL correta da API oficial do WhatsApp Business
 const WHATSAPP_BUSINESS_ACCOUNT_ID = process.env.REACT_APP_WHATSAPP_BUSINESS_ID;
 const WHATSAPP_ACCESS_TOKEN = process.env.REACT_APP_WHATSAPP_ACCESS_TOKEN;
 
