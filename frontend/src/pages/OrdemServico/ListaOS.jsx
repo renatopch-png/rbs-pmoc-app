@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../services/firebase";
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { ref, deleteObject } from "firebase/storage";
+import { db, storage } from "../../services/firebase";
 
 export default function ListaOS() {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ export default function ListaOS() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [aberta, setAberta] = useState(null);
+  const [excluindo, setExcluindo] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -41,6 +43,51 @@ export default function ListaOS() {
     return `${feitos} de ${itens.length} itens`;
   }
 
+  // Apaga um arquivo do Storage a partir da URL salva no Firestore.
+  // Se o arquivo já não existir (ou a URL for de outro lugar), apenas ignora.
+  async function apagarArquivoStorage(url) {
+    if (!url) return;
+    try {
+      const fileRef = ref(storage, url);
+      await deleteObject(fileRef);
+    } catch (e) {
+      console.warn("Não foi possível apagar arquivo do Storage:", url, e.message);
+    }
+  }
+
+  async function excluirOS(os) {
+    const confirmar = window.confirm(
+      `Excluir a OS de "${os.equipamentoNome || "equipamento"}" (${formatarData(
+        os.dataExecucao
+      )})?\n\nEssa ação apaga também as fotos e a assinatura. Não pode ser desfeita.`
+    );
+    if (!confirmar) return;
+
+    setExcluindo(os.id);
+    try {
+      // Apaga fotos e assinatura do Storage (não trava a exclusão se alguma falhar)
+      const urls = [
+        ...(Array.isArray(os.fotosAntes) ? os.fotosAntes : []),
+        ...(Array.isArray(os.fotosDepois) ? os.fotosDepois : []),
+        ...(Array.isArray(os.fotos) ? os.fotos : []),
+        os.assinaturaClienteUrl,
+      ].filter(Boolean);
+
+      await Promise.all(urls.map(apagarArquivoStorage));
+
+      // Apaga o registro da OS no Firestore
+      await deleteDoc(doc(db, "ordens_servico", os.id));
+
+      // Remove da tela sem precisar recarregar
+      setOrdens((prev) => prev.filter((o) => o.id !== os.id));
+      if (aberta === os.id) setAberta(null);
+    } catch (e) {
+      alert("Erro ao excluir: " + e.message);
+    } finally {
+      setExcluindo(null);
+    }
+  }
+
   return (
     <div className="p-6">
       <h1 className="mb-1 text-2xl font-bold text-gray-900">Ordens de serviço</h1>
@@ -68,36 +115,47 @@ export default function ListaOS() {
               key={os.id}
               className="rounded-xl border border-gray-200 bg-white shadow-sm"
             >
-              <button
-                onClick={() => setAberta(aberta === os.id ? null : os.id)}
-                className="flex w-full items-center justify-between gap-4 p-4 text-left"
-              >
-                <div>
-                  <div className="font-semibold text-gray-900">
-                    {os.equipamentoNome || "Equipamento sem nome"}
+              <div className="flex w-full items-center justify-between gap-4 p-4">
+                <button
+                  onClick={() => setAberta(aberta === os.id ? null : os.id)}
+                  className="flex flex-1 items-center justify-between gap-4 text-left"
+                >
+                  <div>
+                    <div className="font-semibold text-gray-900">
+                      {os.equipamentoNome || "Equipamento sem nome"}
+                    </div>
+                    <div className="mt-0.5 text-sm text-gray-600">
+                      {formatarData(os.dataExecucao)} · {os.tecnicoNome || "técnico não identificado"}
+                    </div>
                   </div>
-                  <div className="mt-0.5 text-sm text-gray-600">
-                    {formatarData(os.dataExecucao)} · {os.tecnicoNome || "técnico não identificado"}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  {os.tipoAtendimento && (
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                        os.tipoAtendimento === "Corretiva"
-                          ? "bg-orange-50 text-orange-800"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {os.tipoAtendimento === "Corretiva" ? "🛠️ Corretiva" : "🗓️ Preventiva"}
+                  <div className="flex items-center gap-3">
+                    {os.tipoAtendimento && (
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          os.tipoAtendimento === "Corretiva"
+                            ? "bg-orange-50 text-orange-800"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {os.tipoAtendimento === "Corretiva" ? "🛠️ Corretiva" : "🗓️ Preventiva"}
+                      </span>
+                    )}
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800">
+                      {resumoChecklist(os.itensChecklist)}
                     </span>
-                  )}
-                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800">
-                    {resumoChecklist(os.itensChecklist)}
-                  </span>
-                  <span className="text-gray-400">{aberta === os.id ? "▲" : "▼"}</span>
-                </div>
-              </button>
+                    <span className="text-gray-400">{aberta === os.id ? "▲" : "▼"}</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => excluirOS(os)}
+                  disabled={excluindo === os.id}
+                  title="Excluir esta ordem de serviço"
+                  className="ml-2 shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                >
+                  {excluindo === os.id ? "Excluindo..." : "🗑️ Excluir"}
+                </button>
+              </div>
 
               {aberta === os.id && (
                 <div className="border-t border-gray-100 p-4">
