@@ -23,8 +23,10 @@ export function AuthProvider({ children }) {
     );
   }
 
+  const isAdmin = usuario?.perfil?.papel === "admin";
+
   return (
-    <AuthContext.Provider value={{ usuario, setUsuario }}>
+    <AuthContext.Provider value={{ usuario, setUsuario, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
