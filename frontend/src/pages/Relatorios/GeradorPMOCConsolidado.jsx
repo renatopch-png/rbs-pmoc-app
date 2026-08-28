@@ -5,6 +5,15 @@ import { db } from "../../services/firebase";
 import { DADOS_RBS } from "../../services/ServicoWhatsApp";
 import html2pdf from "html2pdf.js";
 
+// Mesmo mapeamento usado no alerta de manutenções atrasadas do Dashboard
+const PERIODICIDADES = {
+  Mensal: 30,
+  Bimestral: 60,
+  Trimestral: 90,
+  Semestral: 180,
+  Anual: 365,
+};
+
 // Relatório PMOC consolidado: um único PDF reunindo TODOS os equipamentos
 // de um cliente, cada um com os dados do equipamento e a última manutenção
 // executada — inspirado no relatório multi-ambiente dos PDFs de referência
@@ -50,9 +59,40 @@ export default function GeradorPMOCConsolidado() {
                 const db_ = b.dataExecucao?.toMillis ? b.dataExecucao.toMillis() : 0;
                 return db_ - da;
               });
-            return { equipamento, ultimaOS: os[0] || null, totalExecucoes: os.length };
+            const ultimaOS = os[0] || null;
+            const periodicidade = equipamento.periodicidade || "Mensal";
+            const diasPeriodo = PERIODICIDADES[periodicidade] || 30;
+
+            let proximaData = null;
+            let diasRestantes = null;
+            if (ultimaOS) {
+              const dataUltima = ultimaOS.dataExecucao?.toDate
+                ? ultimaOS.dataExecucao.toDate()
+                : new Date(ultimaOS.dataExecucao);
+              proximaData = new Date(dataUltima);
+              proximaData.setDate(proximaData.getDate() + diasPeriodo);
+              diasRestantes = Math.ceil((proximaData - new Date()) / (1000 * 60 * 60 * 24));
+            }
+
+            return {
+              equipamento,
+              ultimaOS,
+              totalExecucoes: os.length,
+              periodicidade,
+              proximaData,
+              diasRestantes,
+            };
           })
         );
+
+        // Ordena a lista pela urgência: sem manutenção nunca feita primeiro,
+        // depois pela data prevista mais próxima (mais atrasada primeiro)
+        lista.sort((a, b) => {
+          if (!a.ultimaOS && !b.ultimaOS) return 0;
+          if (!a.ultimaOS) return -1;
+          if (!b.ultimaOS) return 1;
+          return a.proximaData - b.proximaData;
+        });
 
         setItens(lista);
       } catch (e) {
@@ -73,6 +113,13 @@ export default function GeradorPMOCConsolidado() {
     if (!v) return "—";
     const d = v.toDate ? v.toDate() : new Date(v);
     return d.toLocaleString("pt-BR");
+  }
+
+  function statusManutencao(diasRestantes) {
+    if (diasRestantes === null) return { texto: "Nunca realizada", cor: "#dc2626" };
+    if (diasRestantes < 0) return { texto: `Atrasada há ${Math.abs(diasRestantes)} dia(s)`, cor: "#dc2626" };
+    if (diasRestantes <= 7) return { texto: `Vence em ${diasRestantes} dia(s)`, cor: "#d97706" };
+    return { texto: `Em dia (${diasRestantes} dias)`, cor: "#16a34a" };
   }
 
   function gerarPDF() {
@@ -272,8 +319,62 @@ export default function GeradorPMOCConsolidado() {
             </div>
           </div>
 
+          {/* Cronograma de Manutenções — visão geral ordenada por urgência */}
+          {itens.length > 0 && (
+            <div style={{ marginBottom: "30px" }}>
+              <h2 style={{ fontSize: "14px", fontWeight: "bold", margin: "0 0 10px 0", color: "#1e3a8a" }}>
+                📅 CRONOGRAMA DE MANUTENÇÕES
+              </h2>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+                <thead>
+                  <tr style={{ backgroundColor: "#1e3a8a", color: "#fff" }}>
+                    <th style={{ padding: "6px 8px", textAlign: "left" }}>Equipamento</th>
+                    <th style={{ padding: "6px 8px", textAlign: "left" }}>Periodicidade</th>
+                    <th style={{ padding: "6px 8px", textAlign: "left" }}>Última manutenção</th>
+                    <th style={{ padding: "6px 8px", textAlign: "left" }}>Próxima prevista</th>
+                    <th style={{ padding: "6px 8px", textAlign: "left" }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itens.map(({ equipamento, ultimaOS, periodicidade, proximaData, diasRestantes }, idx) => {
+                    const status = statusManutencao(diasRestantes);
+                    return (
+                      <tr
+                        key={equipamento.id}
+                        style={{ backgroundColor: idx % 2 === 0 ? "#fff" : "#f0f4ff" }}
+                      >
+                        <td style={{ padding: "6px 8px", borderBottom: "1px solid #e5e7eb" }}>
+                          {equipamento.nome}
+                        </td>
+                        <td style={{ padding: "6px 8px", borderBottom: "1px solid #e5e7eb" }}>
+                          {periodicidade}
+                        </td>
+                        <td style={{ padding: "6px 8px", borderBottom: "1px solid #e5e7eb" }}>
+                          {formatarData(ultimaOS?.dataExecucao)}
+                        </td>
+                        <td style={{ padding: "6px 8px", borderBottom: "1px solid #e5e7eb" }}>
+                          {formatarData(proximaData)}
+                        </td>
+                        <td
+                          style={{
+                            padding: "6px 8px",
+                            borderBottom: "1px solid #e5e7eb",
+                            color: status.cor,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {status.texto}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {/* Um bloco por equipamento */}
-          {itens.map(({ equipamento, ultimaOS, totalExecucoes }, idx) => (
+          {itens.map(({ equipamento, ultimaOS, totalExecucoes, periodicidade, proximaData, diasRestantes }, idx) => (
             <div
               key={equipamento.id}
               style={{
@@ -362,17 +463,35 @@ export default function GeradorPMOCConsolidado() {
                   <div style={{ fontSize: "12px", margin: "4px 0" }}>
                     <strong>Técnico:</strong> {ultimaOS.tecnicoNome || "—"}
                   </div>
-                  {Array.isArray(ultimaOS.itensChecklist) && ultimaOS.itensChecklist.length > 0 && (
-                    <div style={{ fontSize: "12px", margin: "8px 0 4px 0" }}>
-                      <strong>Checklist:</strong>{" "}
-                      {
-                        ultimaOS.itensChecklist.filter(
-                          (i) => i.feito || i.concluido || i.checked
-                        ).length
-                      }
-                      /{ultimaOS.itensChecklist.length} itens concluídos
-                    </div>
-                  )}
+                  <div style={{ fontSize: "12px", margin: "4px 0" }}>
+                    <strong>Periodicidade:</strong> {periodicidade}
+                  </div>
+                  <div style={{ fontSize: "12px", margin: "4px 0" }}>
+                    <strong>Próxima manutenção prevista:</strong> {formatarData(proximaData)} —{" "}
+                    <span style={{ color: statusManutencao(diasRestantes).cor, fontWeight: "bold" }}>
+                      {statusManutencao(diasRestantes).texto}
+                    </span>
+                  </div>
+                  {Array.isArray(ultimaOS.itensChecklist) && ultimaOS.itensChecklist.length > 0 && (() => {
+                    const feitos = ultimaOS.itensChecklist.filter(
+                      (i) => i.feito || i.concluido || i.checked
+                    );
+                    return (
+                      <div style={{ fontSize: "12px", margin: "8px 0 4px 0" }}>
+                        <strong>
+                          Serviços executados ({feitos.length}/{ultimaOS.itensChecklist.length} itens):
+                        </strong>
+                        <div style={{ marginTop: "4px", paddingLeft: "4px" }}>
+                          {feitos.length > 0
+                            ? feitos
+                                .map((i) => i.descricao || i.nome || i.texto)
+                                .filter(Boolean)
+                                .join(" • ")
+                            : "Nenhum item marcado como concluído."}
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {ultimaOS.observacoes && (
                     <div style={{ fontSize: "12px", margin: "8px 0 0 0", whiteSpace: "pre-wrap" }}>
                       <strong>Observações:</strong> {ultimaOS.observacoes}
@@ -397,7 +516,11 @@ export default function GeradorPMOCConsolidado() {
                     fontSize: "12px",
                   }}
                 >
-                  Nenhuma manutenção registrada ainda para este equipamento.
+                  <strong>Nenhuma manutenção registrada ainda para este equipamento.</strong>
+                  <div style={{ marginTop: "6px" }}>
+                    Periodicidade configurada: <strong>{periodicidade}</strong> — agendar a
+                    primeira manutenção o quanto antes.
+                  </div>
                 </div>
               )}
             </div>
