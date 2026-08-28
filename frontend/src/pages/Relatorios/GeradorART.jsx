@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
+import { DADOS_RBS } from "../../services/ServicoWhatsApp";
 import html2pdf from "html2pdf.js";
 
-const CNPJ_RBS = "33.632.222/0001-86";
 const ENDERECO_RBS = "Rua Capitão Ferreira, 86 - Rio de Janeiro";
-const TELEFONE_RBS = "(21) 98765-4321";
 
 export default function GeradorART() {
   const { osId } = useParams();
@@ -155,9 +154,9 @@ export default function GeradorART() {
           <div style={{ marginBottom: "20px", fontSize: "11px" }}>
             <strong>Responsável Técnico:</strong>
             <div>RBS Refrigeração Elétrica • Engenharia Térmica • Energia Solar</div>
-            <div>CNPJ: {CNPJ_RBS}</div>
+            <div>CNPJ: {DADOS_RBS.cnpj}</div>
             <div>Endereço: {ENDERECO_RBS}</div>
-            <div>Telefone: {TELEFONE_RBS}</div>
+            <div>Telefone: {DADOS_RBS.telefoneFmt}</div>
           </div>
 
           {/* Dados do Cliente */}
@@ -240,7 +239,9 @@ export default function GeradorART() {
               recomendações do fabricante.
             </p>
             <p style={{ margin: "8px 0" }}>
-              <strong>Responsável Técnico:</strong> {ordem.tecnicoNome || "—"}
+              <strong>Responsável Técnico:</strong> {DADOS_RBS.responsavelTecnico} — {DADOS_RBS.tituloTecnico} — {DADOS_RBS.registroTecnico}
+              <br />
+              <strong>Executado por:</strong> {ordem.tecnicoNome || "—"}
             </p>
             <p style={{ margin: "8px 0" }}>
               <strong>Data de Execução:</strong> {formatarData(ordem.dataExecucao)}
