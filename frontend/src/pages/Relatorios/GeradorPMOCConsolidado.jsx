@@ -122,6 +122,19 @@ export default function GeradorPMOCConsolidado() {
     return { texto: `Em dia (${diasRestantes} dias)`, cor: "#16a34a" };
   }
 
+  function badge(cor) {
+    return {
+      display: "inline-block",
+      padding: "3px 10px",
+      borderRadius: "999px",
+      fontSize: "10px",
+      fontWeight: "bold",
+      color: "#fff",
+      backgroundColor: cor,
+      whiteSpace: "nowrap",
+    };
+  }
+
   function gerarPDF() {
     setGerandoPdf(true);
     const element = document.getElementById("conteudo-pmoc-consolidado");
@@ -167,6 +180,18 @@ export default function GeradorPMOCConsolidado() {
 
   const totalEquipamentos = itens.length;
   const totalComManutencao = itens.filter((it) => it.ultimaOS).length;
+  const totalAtrasados = itens.filter(
+    (it) => it.diasRestantes === null || it.diasRestantes < 0
+  ).length;
+
+  // Paleta usada em todo o relatório, alinhada ao padrão visual da RBS
+  const AZUL = "#0B5394";
+  const AZUL_ESCURO = "#1E40AF";
+  const AZUL_CLARO = "#EFF6FF";
+  const LARANJA = "#d97757";
+  const CINZA_TEXTO = "#374151";
+  const CINZA_MUTED = "#6b7280";
+  const BORDA = "#e5e7eb";
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -200,356 +225,435 @@ export default function GeradorPMOCConsolidado() {
         {/* Conteúdo PDF */}
         <div
           id="conteudo-pmoc-consolidado"
-          className="rounded-xl bg-white p-8 shadow-sm"
           style={{
             fontFamily: "Arial, sans-serif",
-            color: "#333",
-            lineHeight: "1.6",
+            color: CINZA_TEXTO,
+            lineHeight: "1.5",
+            backgroundColor: "#fff",
           }}
         >
-          {/* Capa / cabeçalho */}
+          {/* Faixa de cabeçalho institucional (padrão RBS) */}
           <div
             style={{
-              textAlign: "center",
-              marginBottom: "24px",
-              paddingBottom: "20px",
-              borderBottom: "2px solid #1e3a8a",
+              backgroundColor: AZUL_CLARO,
+              borderBottom: `3px solid ${AZUL}`,
+              padding: "16px 24px",
             }}
           >
-            <div style={{ fontSize: "20px", fontWeight: "bold", color: "#1e3a8a" }}>
+            <div style={{ fontSize: "19px", fontWeight: "bold", color: AZUL }}>
               RBS Refrigeração Elétrica
             </div>
-            <div style={{ fontSize: "11px", color: "#666", marginTop: "2px" }}>
-              Engenharia Térmica • Energia Solar
+            <div style={{ fontSize: "10.5px", color: CINZA_MUTED, marginTop: "2px" }}>
+              Refrigeração Elétrica • Energia Solar • Engenharia Térmica &nbsp;|&nbsp; CNPJ:{" "}
+              {DADOS_RBS.cnpj} &nbsp;|&nbsp; Rua Capitão Ferreira, nº 86 — Rio de Janeiro/RJ
             </div>
           </div>
 
-          <div style={{ textAlign: "center", marginBottom: "30px" }}>
-            <h1
-              style={{
-                fontSize: "26px",
-                fontWeight: "bold",
-                color: "#1e3a8a",
-                margin: "0 0 10px 0",
-              }}
-            >
-              RELATÓRIO CONSOLIDADO PMOC
-            </h1>
-            <p style={{ fontSize: "12px", color: "#666", margin: "0" }}>
-              Plano de Manutenção, Operação e Controle — todos os equipamentos do cliente
-            </p>
-          </div>
-
-          {/* Dados do cliente */}
-          <div
-            style={{
-              marginBottom: "20px",
-              padding: "15px",
-              backgroundColor: "#f0f4ff",
-              borderLeft: "4px solid #1e3a8a",
-              fontSize: "12px",
-            }}
-          >
-            <h2 style={{ fontSize: "14px", fontWeight: "bold", margin: "0 0 10px 0" }}>
-              🏢 CLIENTE
-            </h2>
-            <div style={{ margin: "4px 0" }}>
-              <strong>Empresa:</strong> {cliente.nome}
-            </div>
-            {cliente.edificio && (
-              <div style={{ margin: "4px 0" }}>
-                <strong>Edifício:</strong> {cliente.edificio}
-              </div>
-            )}
-            {cliente.endereco && (
-              <div style={{ margin: "4px 0" }}>
-                <strong>Endereço:</strong> {cliente.endereco}
-              </div>
-            )}
-            {cliente.contato && (
-              <div style={{ margin: "4px 0" }}>
-                <strong>Contato:</strong> {cliente.contato}
-              </div>
-            )}
-            {cliente.telefone && (
-              <div style={{ margin: "4px 0" }}>
-                <strong>Telefone:</strong> {cliente.telefone}
-              </div>
-            )}
-          </div>
-
-          {/* Resumo */}
-          <div
-            style={{
-              marginBottom: "30px",
-              display: "flex",
-              gap: "12px",
-              fontSize: "12px",
-            }}
-          >
-            <div
-              style={{
-                flex: 1,
-                padding: "12px",
-                backgroundColor: "#f9fafb",
-                border: "1px solid #e5e7eb",
-                borderRadius: "6px",
-                textAlign: "center",
-              }}
-            >
-              <div style={{ fontSize: "20px", fontWeight: "bold", color: "#1e3a8a" }}>
-                {totalEquipamentos}
-              </div>
-              <div>Equipamentos</div>
-            </div>
-            <div
-              style={{
-                flex: 1,
-                padding: "12px",
-                backgroundColor: "#f9fafb",
-                border: "1px solid #e5e7eb",
-                borderRadius: "6px",
-                textAlign: "center",
-              }}
-            >
-              <div style={{ fontSize: "20px", fontWeight: "bold", color: "#16a34a" }}>
-                {totalComManutencao}
-              </div>
-              <div>Com manutenção registrada</div>
-            </div>
-          </div>
-
-          {/* Cronograma de Manutenções — visão geral ordenada por urgência */}
-          {itens.length > 0 && (
-            <div style={{ marginBottom: "30px" }}>
-              <h2 style={{ fontSize: "14px", fontWeight: "bold", margin: "0 0 10px 0", color: "#1e3a8a" }}>
-                📅 CRONOGRAMA DE MANUTENÇÕES
-              </h2>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
-                <thead>
-                  <tr style={{ backgroundColor: "#1e3a8a", color: "#fff" }}>
-                    <th style={{ padding: "6px 8px", textAlign: "left" }}>Equipamento</th>
-                    <th style={{ padding: "6px 8px", textAlign: "left" }}>Periodicidade</th>
-                    <th style={{ padding: "6px 8px", textAlign: "left" }}>Última manutenção</th>
-                    <th style={{ padding: "6px 8px", textAlign: "left" }}>Próxima prevista</th>
-                    <th style={{ padding: "6px 8px", textAlign: "left" }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {itens.map(({ equipamento, ultimaOS, periodicidade, proximaData, diasRestantes }, idx) => {
-                    const status = statusManutencao(diasRestantes);
-                    return (
-                      <tr
-                        key={equipamento.id}
-                        style={{ backgroundColor: idx % 2 === 0 ? "#fff" : "#f0f4ff" }}
-                      >
-                        <td style={{ padding: "6px 8px", borderBottom: "1px solid #e5e7eb" }}>
-                          {equipamento.nome}
-                        </td>
-                        <td style={{ padding: "6px 8px", borderBottom: "1px solid #e5e7eb" }}>
-                          {periodicidade}
-                        </td>
-                        <td style={{ padding: "6px 8px", borderBottom: "1px solid #e5e7eb" }}>
-                          {formatarData(ultimaOS?.dataExecucao)}
-                        </td>
-                        <td style={{ padding: "6px 8px", borderBottom: "1px solid #e5e7eb" }}>
-                          {formatarData(proximaData)}
-                        </td>
-                        <td
-                          style={{
-                            padding: "6px 8px",
-                            borderBottom: "1px solid #e5e7eb",
-                            color: status.cor,
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {status.texto}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Um bloco por equipamento */}
-          {itens.map(({ equipamento, ultimaOS, totalExecucoes, periodicidade, proximaData, diasRestantes }, idx) => (
-            <div
-              key={equipamento.id}
-              style={{
-                marginBottom: "24px",
-                pageBreakBefore: idx === 0 ? "auto" : "always",
-                breakBefore: idx === 0 ? "auto" : "page",
-              }}
-            >
-              {/* Dados do equipamento */}
-              <div
+          <div style={{ padding: "28px 24px 24px" }}>
+            {/* Título do relatório */}
+            <div style={{ textAlign: "center", marginBottom: "24px" }}>
+              <h1
                 style={{
-                  marginBottom: "12px",
-                  padding: "15px",
-                  backgroundColor: "#fff5f0",
-                  borderLeft: "4px solid #d97757",
+                  fontSize: "24px",
+                  fontWeight: "bold",
+                  color: AZUL,
+                  margin: "0 0 6px 0",
+                  letterSpacing: "0.3px",
                 }}
               >
-                <h2 style={{ fontSize: "14px", fontWeight: "bold", margin: "0 0 10px 0" }}>
-                  ⚙️ {idx + 1}. {equipamento.nome}
+                RELATÓRIO CONSOLIDADO PMOC
+              </h1>
+              <p style={{ fontSize: "11.5px", color: CINZA_MUTED, margin: 0 }}>
+                Plano de Manutenção, Operação e Controle — todos os equipamentos do cliente
+              </p>
+            </div>
+
+            {/* Dados do cliente */}
+            <div
+              style={{
+                marginBottom: "20px",
+                padding: "14px 16px",
+                backgroundColor: "#fff",
+                border: `1px solid ${BORDA}`,
+                borderLeft: `4px solid ${AZUL}`,
+                borderRadius: "6px",
+                fontSize: "12px",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "bold",
+                  margin: "0 0 8px 0",
+                  color: AZUL,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                🏢 Cliente
+              </h2>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 16px" }}>
+                <div><strong>Empresa:</strong> {cliente.nome}</div>
+                {cliente.edificio && <div><strong>Edifício:</strong> {cliente.edificio}</div>}
+                {cliente.endereco && <div><strong>Endereço:</strong> {cliente.endereco}</div>}
+                {cliente.contato && <div><strong>Contato:</strong> {cliente.contato}</div>}
+                {cliente.telefone && <div><strong>Telefone:</strong> {cliente.telefone}</div>}
+              </div>
+            </div>
+
+            {/* Resumo (3 indicadores) */}
+            <div style={{ marginBottom: "26px", display: "flex", gap: "10px", fontSize: "12px" }}>
+              <div
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  backgroundColor: "#fff",
+                  border: `1px solid ${BORDA}`,
+                  borderRadius: "8px",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "22px", fontWeight: "bold", color: AZUL }}>
+                  {totalEquipamentos}
+                </div>
+                <div style={{ color: CINZA_MUTED }}>Equipamentos</div>
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  backgroundColor: "#fff",
+                  border: `1px solid ${BORDA}`,
+                  borderRadius: "8px",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "22px", fontWeight: "bold", color: "#16a34a" }}>
+                  {totalComManutencao}
+                </div>
+                <div style={{ color: CINZA_MUTED }}>Com manutenção</div>
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  backgroundColor: totalAtrasados > 0 ? "#fef2f2" : "#fff",
+                  border: `1px solid ${totalAtrasados > 0 ? "#fecaca" : BORDA}`,
+                  borderRadius: "8px",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "22px",
+                    fontWeight: "bold",
+                    color: totalAtrasados > 0 ? "#dc2626" : "#16a34a",
+                  }}
+                >
+                  {totalAtrasados}
+                </div>
+                <div style={{ color: CINZA_MUTED }}>Atrasados / nunca feitos</div>
+              </div>
+            </div>
+
+            {/* Cronograma de Manutenções — visão geral ordenada por urgência */}
+            {itens.length > 0 && (
+              <div style={{ marginBottom: "28px" }}>
+                <h2
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "bold",
+                    margin: "0 0 10px 0",
+                    color: AZUL,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  📅 Cronograma de Manutenções
                 </h2>
-                <div style={{ fontSize: "12px", margin: "4px 0" }}>
-                  <strong>Tipo:</strong> {equipamento.tipo || "—"}
-                </div>
-                <div style={{ fontSize: "12px", margin: "4px 0" }}>
-                  <strong>Marca:</strong> {equipamento.marca || "—"}
-                </div>
-                <div style={{ fontSize: "12px", margin: "4px 0" }}>
-                  <strong>Modelo:</strong> {equipamento.modelo || "—"}
-                </div>
-                <div style={{ fontSize: "12px", margin: "4px 0" }}>
-                  <strong>Capacidade:</strong> {equipamento.capacidade || "—"}
-                </div>
-                <div style={{ fontSize: "12px", margin: "4px 0" }}>
-                  <strong>Local:</strong> {equipamento.local || "—"}
-                </div>
-                {equipamento.numeroSerie && (
-                  <div style={{ fontSize: "12px", margin: "4px 0" }}>
-                    <strong>Nº de série:</strong> {equipamento.numeroSerie}
-                  </div>
-                )}
-                {(equipamento.ocupanteFixo ||
-                  equipamento.ocupanteFlutuante ||
-                  equipamento.areaClimatizada) && (
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: "10.5px",
+                    borderRadius: "6px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <thead>
+                    <tr style={{ backgroundColor: AZUL_ESCURO }}>
+                      <th style={{ padding: "8px 10px", textAlign: "left", color: "#fff" }}>
+                        Equipamento
+                      </th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", color: "#fff" }}>
+                        Periodicidade
+                      </th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", color: "#fff" }}>
+                        Última manutenção
+                      </th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", color: "#fff" }}>
+                        Próxima prevista
+                      </th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", color: "#fff" }}>
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {itens.map(({ equipamento, ultimaOS, periodicidade, proximaData, diasRestantes }, idx) => {
+                      const status = statusManutencao(diasRestantes);
+                      return (
+                        <tr
+                          key={equipamento.id}
+                          style={{ backgroundColor: idx % 2 === 0 ? "#fff" : AZUL_CLARO }}
+                        >
+                          <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDA}`, fontWeight: "600" }}>
+                            {equipamento.nome}
+                          </td>
+                          <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDA}` }}>
+                            {periodicidade}
+                          </td>
+                          <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDA}` }}>
+                            {formatarData(ultimaOS?.dataExecucao)}
+                          </td>
+                          <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDA}` }}>
+                            {formatarData(proximaData)}
+                          </td>
+                          <td style={{ padding: "7px 10px", borderBottom: `1px solid ${BORDA}` }}>
+                            <span style={badge(status.cor)}>{status.texto}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Um card por equipamento */}
+            {itens.map(({ equipamento, ultimaOS, totalExecucoes, periodicidade, proximaData, diasRestantes }, idx) => {
+              const status = statusManutencao(diasRestantes);
+              return (
+                <div
+                  key={equipamento.id}
+                  style={{
+                    marginBottom: "18px",
+                    border: `1px solid ${BORDA}`,
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    pageBreakInside: "avoid",
+                    breakInside: "avoid",
+                    pageBreakBefore: idx === 0 ? "auto" : idx % 2 === 0 ? "always" : "auto",
+                    breakBefore: idx === 0 ? "auto" : idx % 2 === 0 ? "page" : "auto",
+                  }}
+                >
+                  {/* Cabeçalho do card: nome + status */}
                   <div
                     style={{
-                      marginTop: "10px",
-                      paddingTop: "10px",
-                      borderTop: "1px dashed #d97757",
-                      fontSize: "12px",
+                      backgroundColor: AZUL_CLARO,
+                      borderBottom: `1px solid ${BORDA}`,
+                      padding: "10px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "10px",
                     }}
                   >
-                    {equipamento.areaClimatizada && (
-                      <div style={{ margin: "4px 0" }}>
-                        <strong>Área climatizada:</strong> {equipamento.areaClimatizada} m²
-                      </div>
-                    )}
-                    {(equipamento.ocupanteFixo || equipamento.ocupanteFlutuante) && (
-                      <div style={{ margin: "4px 0" }}>
-                        <strong>Ocupantes:</strong> {equipamento.ocupanteFixo || "0"} fixo(s)
-                        {equipamento.ocupanteFlutuante
-                          ? ` + ${equipamento.ocupanteFlutuante} flutuante(s)`
-                          : ""}
-                      </div>
-                    )}
+                    <h2 style={{ fontSize: "13.5px", fontWeight: "bold", margin: 0, color: AZUL }}>
+                      ⚙️ {idx + 1}. {equipamento.nome}
+                    </h2>
+                    <span style={badge(status.cor)}>{status.texto}</span>
                   </div>
-                )}
-              </div>
 
-              {/* Última manutenção */}
-              {ultimaOS ? (
-                <div
-                  style={{
-                    marginBottom: "12px",
-                    padding: "15px",
-                    backgroundColor: "#f0fdf4",
-                    borderLeft: "4px solid #16a34a",
-                  }}
-                >
-                  <h3 style={{ fontSize: "13px", fontWeight: "bold", margin: "0 0 10px 0" }}>
-                    ✓ ÚLTIMA MANUTENÇÃO
-                    {totalExecucoes > 1 ? ` (${totalExecucoes} execuções no histórico)` : ""}
-                  </h3>
-                  <div style={{ fontSize: "12px", margin: "4px 0" }}>
-                    <strong>Data/Hora:</strong> {formatarDataHora(ultimaOS.dataExecucao)}
-                  </div>
-                  <div style={{ fontSize: "12px", margin: "4px 0" }}>
-                    <strong>Técnico:</strong> {ultimaOS.tecnicoNome || "—"}
-                  </div>
-                  <div style={{ fontSize: "12px", margin: "4px 0" }}>
-                    <strong>Periodicidade:</strong> {periodicidade}
-                  </div>
-                  <div style={{ fontSize: "12px", margin: "4px 0" }}>
-                    <strong>Próxima manutenção prevista:</strong> {formatarData(proximaData)} —{" "}
-                    <span style={{ color: statusManutencao(diasRestantes).cor, fontWeight: "bold" }}>
-                      {statusManutencao(diasRestantes).texto}
-                    </span>
-                  </div>
-                  {Array.isArray(ultimaOS.itensChecklist) && ultimaOS.itensChecklist.length > 0 && (() => {
-                    const feitos = ultimaOS.itensChecklist.filter(
-                      (i) => i.feito || i.concluido || i.checked
-                    );
-                    return (
-                      <div style={{ fontSize: "12px", margin: "8px 0 4px 0" }}>
-                        <strong>
-                          Serviços executados ({feitos.length}/{ultimaOS.itensChecklist.length} itens):
-                        </strong>
-                        <div style={{ marginTop: "4px", paddingLeft: "4px" }}>
-                          {feitos.length > 0
-                            ? feitos
-                                .map((i) => i.descricao || i.nome || i.texto)
-                                .filter(Boolean)
-                                .join(" • ")
-                            : "Nenhum item marcado como concluído."}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                  {ultimaOS.observacoes && (
-                    <div style={{ fontSize: "12px", margin: "8px 0 0 0", whiteSpace: "pre-wrap" }}>
-                      <strong>Observações:</strong> {ultimaOS.observacoes}
-                    </div>
-                  )}
-                  <div style={{ fontSize: "11px", marginTop: "8px" }}>
-                    <Link
-                      to={`/relatorios/pmoc/${ultimaOS.id}`}
-                      style={{ color: "#1e3a8a", textDecoration: "underline" }}
+                  <div style={{ padding: "14px" }}>
+                    {/* Dados do equipamento em grade */}
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr 1fr",
+                        gap: "8px 14px",
+                        fontSize: "11px",
+                        marginBottom: "12px",
+                      }}
                     >
-                      Ver relatório PMOC individual completo desta execução →
-                    </Link>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  style={{
-                    marginBottom: "12px",
-                    padding: "15px",
-                    backgroundColor: "#fffbeb",
-                    borderLeft: "4px solid #f59e0b",
-                    fontSize: "12px",
-                  }}
-                >
-                  <strong>Nenhuma manutenção registrada ainda para este equipamento.</strong>
-                  <div style={{ marginTop: "6px" }}>
-                    Periodicidade configurada: <strong>{periodicidade}</strong> — agendar a
-                    primeira manutenção o quanto antes.
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+                      <div>
+                        <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                          Tipo
+                        </div>
+                        <div style={{ fontWeight: "600" }}>{equipamento.tipo || "—"}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                          Marca
+                        </div>
+                        <div style={{ fontWeight: "600" }}>{equipamento.marca || "—"}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                          Modelo
+                        </div>
+                        <div style={{ fontWeight: "600" }}>{equipamento.modelo || "—"}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                          Capacidade
+                        </div>
+                        <div style={{ fontWeight: "600" }}>{equipamento.capacidade || "—"}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                          Local
+                        </div>
+                        <div style={{ fontWeight: "600" }}>{equipamento.local || "—"}</div>
+                      </div>
+                      {equipamento.numeroSerie && (
+                        <div>
+                          <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                            Nº de série
+                          </div>
+                          <div style={{ fontWeight: "600" }}>{equipamento.numeroSerie}</div>
+                        </div>
+                      )}
+                      {(equipamento.ocupanteFixo || equipamento.ocupanteFlutuante) && (
+                        <div>
+                          <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                            Ocupantes
+                          </div>
+                          <div style={{ fontWeight: "600" }}>
+                            {equipamento.ocupanteFixo || "0"} fixo(s)
+                            {equipamento.ocupanteFlutuante ? ` + ${equipamento.ocupanteFlutuante} flut.` : ""}
+                          </div>
+                        </div>
+                      )}
+                      {equipamento.areaClimatizada && (
+                        <div>
+                          <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                            Área climatizada
+                          </div>
+                          <div style={{ fontWeight: "600" }}>{equipamento.areaClimatizada} m²</div>
+                        </div>
+                      )}
+                    </div>
 
-          {/* Rodapé */}
-          <div
-            style={{
-              marginTop: "30px",
-              paddingTop: "20px",
-              borderTop: "2px solid #1e3a8a",
-              textAlign: "center",
-              fontSize: "9px",
-              color: "#666",
-            }}
-          >
-            <p style={{ margin: "4px 0" }}>
-              <strong>{DADOS_RBS.empresa} • {DADOS_RBS.slogan}</strong>
-            </p>
-            <p style={{ margin: "4px 0" }}>
-              CNPJ: {DADOS_RBS.cnpj} • Tel: {DADOS_RBS.telefoneFmt}
-            </p>
-            <p style={{ margin: "4px 0" }}>
-              Responsável Técnico: {DADOS_RBS.responsavelTecnico} • {DADOS_RBS.registroTecnico}
-            </p>
-            <p style={{ margin: "4px 0" }}>
-              Documento gerado automaticamente pelo Sistema PMOC RBS em{" "}
-              {new Date().toLocaleString("pt-BR")}
-            </p>
+                    <div style={{ borderTop: `1px dashed ${BORDA}`, paddingTop: "12px" }}>
+                      {ultimaOS ? (
+                        <>
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "1fr 1fr",
+                              gap: "8px 14px",
+                              fontSize: "11px",
+                              marginBottom: "10px",
+                            }}
+                          >
+                            <div>
+                              <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                                Última manutenção
+                              </div>
+                              <div style={{ fontWeight: "600" }}>{formatarDataHora(ultimaOS.dataExecucao)}</div>
+                            </div>
+                            <div>
+                              <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                                Técnico
+                              </div>
+                              <div style={{ fontWeight: "600" }}>{ultimaOS.tecnicoNome || "—"}</div>
+                            </div>
+                            <div>
+                              <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                                Periodicidade
+                              </div>
+                              <div style={{ fontWeight: "600" }}>{periodicidade}</div>
+                            </div>
+                            <div>
+                              <div style={{ color: CINZA_MUTED, fontSize: "9.5px", textTransform: "uppercase" }}>
+                                Próxima prevista
+                              </div>
+                              <div style={{ fontWeight: "600" }}>{formatarData(proximaData)}</div>
+                            </div>
+                          </div>
+
+                          {Array.isArray(ultimaOS.itensChecklist) && ultimaOS.itensChecklist.length > 0 && (() => {
+                            const feitos = ultimaOS.itensChecklist.filter(
+                              (i) => i.feito || i.concluido || i.checked
+                            );
+                            return (
+                              <div
+                                style={{
+                                  fontSize: "10.5px",
+                                  backgroundColor: "#f9fafb",
+                                  border: `1px solid ${BORDA}`,
+                                  borderRadius: "6px",
+                                  padding: "8px 10px",
+                                  marginBottom: ultimaOS.observacoes ? "10px" : 0,
+                                }}
+                              >
+                                <strong style={{ color: CINZA_TEXTO }}>
+                                  Serviços executados ({feitos.length}/{ultimaOS.itensChecklist.length}):
+                                </strong>
+                                <div style={{ marginTop: "4px", color: CINZA_MUTED }}>
+                                  {feitos.length > 0
+                                    ? feitos.map((i) => i.descricao || i.nome || i.texto).filter(Boolean).join(" • ")
+                                    : "Nenhum item marcado como concluído."}
+                                </div>
+                              </div>
+                            );
+                          })()}
+
+                          {ultimaOS.observacoes && (
+                            <div style={{ fontSize: "10.5px", whiteSpace: "pre-wrap", color: CINZA_MUTED }}>
+                              <strong style={{ color: CINZA_TEXTO }}>Observações:</strong> {ultimaOS.observacoes}
+                            </div>
+                          )}
+
+                          <div style={{ fontSize: "10.5px", marginTop: "10px" }}>
+                            <Link
+                              to={`/relatorios/pmoc/${ultimaOS.id}`}
+                              style={{ color: AZUL, fontWeight: "600", textDecoration: "none" }}
+                            >
+                              Ver relatório PMOC individual completo →
+                            </Link>
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ fontSize: "11px", color: "#991b1b" }}>
+                          <strong>Nenhuma manutenção registrada ainda para este equipamento.</strong>
+                          <div style={{ marginTop: "4px", color: CINZA_MUTED }}>
+                            Periodicidade configurada: <strong>{periodicidade}</strong> — agendar a primeira
+                            manutenção o quanto antes.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Rodapé */}
+            <div
+              style={{
+                marginTop: "26px",
+                paddingTop: "16px",
+                borderTop: `2px solid ${AZUL}`,
+                textAlign: "center",
+                fontSize: "9px",
+                color: CINZA_MUTED,
+              }}
+            >
+              <p style={{ margin: "3px 0" }}>
+                <strong style={{ color: CINZA_TEXTO }}>{DADOS_RBS.empresa} • {DADOS_RBS.slogan}</strong>
+              </p>
+              <p style={{ margin: "3px 0" }}>
+                CNPJ: {DADOS_RBS.cnpj} • Tel: {DADOS_RBS.telefoneFmt}
+              </p>
+              <p style={{ margin: "3px 0" }}>
+                Responsável Técnico: {DADOS_RBS.responsavelTecnico} • {DADOS_RBS.registroTecnico}
+              </p>
+              <p style={{ margin: "3px 0" }}>
+                Documento gerado automaticamente pelo Sistema PMOC RBS em {new Date().toLocaleString("pt-BR")}
+              </p>
+            </div>
           </div>
         </div>
       </div>
