@@ -7,7 +7,6 @@ import html2pdf from "html2pdf.js";
 
 const CNPJ_RBS = "33.632.222/0001-86";
 const ENDERECO_RBS = "Rua Capitão Ferreira, 86 - Rio de Janeiro";
-const TELEFONE_RBS = "(21) 98765-4321";
 
 export default function GeradorContrato() {
   const { clienteId } = useParams();
@@ -175,7 +174,7 @@ export default function GeradorContrato() {
             <div>RBS Refrigeração Elétrica • Engenharia Térmica • Energia Solar</div>
             <div>CNPJ: {CNPJ_RBS}</div>
             <div>Endereço: {ENDERECO_RBS}</div>
-            <div>Telefone: {TELEFONE_RBS}</div>
+            <div>Telefone: {DADOS_RBS.telefoneFmt}</div>
             <div>
               Responsável Técnico: {DADOS_RBS.responsavelTecnico} — {DADOS_RBS.tituloTecnico} —{" "}
               {DADOS_RBS.registroTecnico}
