@@ -61,6 +61,9 @@ export default function PublicoEquipamento() {
     return d.toLocaleDateString("pt-BR");
   }
 
+  // IMPORTANTE: este botão é clicado pelo CLIENTE (ou por quem escaneou o QR
+  // Code), então a mensagem tem que cair sempre no WhatsApp da RBS — nunca
+  // no telefone cadastrado do próprio cliente.
   function abrirWhatsApp() {
     const url = window.location.href;
     const cliente_nome = cliente?.nome || equipamento?.nome || "equipamento";
@@ -68,11 +71,7 @@ export default function PublicoEquipamento() {
     const msg = encodeURIComponent(
       `Olá RBS! 👋\n\nGostaria de abrir um chamado de manutenção:\n\n🏢 Cliente: ${cliente_nome}\n⚙️ Equipamento: ${equipamento_nome}\n\nConsulta: ${url}`
     );
-    window.open(`https://wa.me/55${getTelefone()}?text=${msg}`, "_blank");
-  }
-
-  function getTelefone() {
-    return cliente?.telefone?.replace(/\D/g, "") || "5521987654321";
+    window.open(`https://wa.me/${DADOS_RBS.telefone}?text=${msg}`, "_blank");
   }
 
   const urlQR = window.location.href;
