@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../services/firebase";
 
@@ -11,6 +12,7 @@ const PERIODICIDADES = {
 };
 
 export default function NotificacoesManuencao() {
+  const navigate = useNavigate();
   const [alertas, setAlertas] = useState([]);
   const [carregando, setCarregando] = useState(true);
 
@@ -54,7 +56,6 @@ export default function NotificacoesManuencao() {
                 clienteNome: eq.clienteNome || "—",
                 diasAtrasada: diasAtrasada,
                 ultimaManutencao: dataUltimaOS,
-                telefone: eq.telefone,
               });
             }
           } else {
@@ -66,7 +67,6 @@ export default function NotificacoesManuencao() {
               clienteNome: eq.clienteNome || "—",
               diasAtrasada: "Nunca",
               ultimaManutencao: null,
-              telefone: eq.telefone,
             });
           }
         });
@@ -112,8 +112,11 @@ export default function NotificacoesManuencao() {
                     : `${alerta.diasAtrasada} dias atrasado`}
                 </p>
               </div>
-              <button className="rounded-lg bg-red-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-900">
-                📞 Chamar
+              <button
+                onClick={() => navigate(`/ordens-servico/executar/${alerta.equipamentoId}`)}
+                className="rounded-lg bg-red-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-900"
+              >
+                🔧 Executar manutenção
               </button>
             </div>
           ))}
