@@ -44,9 +44,34 @@ const CATEGORIAS_SISTEMA = [
   },
 ];
 
+const GASES_REFRIGERANTES = [
+  "R-22",
+  "R-134a",
+  "R-404A",
+  "R-407C",
+  "R-410A",
+  "R-32",
+  "R-507A",
+  "R-448A",
+  "R-449A",
+  "R-452A",
+  "R-454B",
+  "R-1234yf",
+  "R-1234ze",
+  "R-290 (Propano)",
+  "R-600a (Isobutano)",
+  "R-717 (Amônia)",
+  "R-744 (CO₂)",
+  "R-23",
+  "R-402A",
+  "R-508B",
+  "Outro",
+];
+
 const VAZIO = {
   nome: "",
   categoriaSistema: "",
+  tipoGas: "",
   tipo: "Split Hi-Wall",
   marca: "",
   modelo: "",
@@ -155,6 +180,7 @@ export default function ListaEquipamentos() {
       const dados = {
         nome: form.nome.trim(),
         categoriaSistema: form.categoriaSistema,
+        tipoGas: form.tipoGas,
         tipo: form.tipo,
         marca: form.marca.trim(),
         modelo: form.modelo.trim(),
@@ -262,6 +288,30 @@ export default function ListaEquipamentos() {
                       <span className="text-[10px] leading-tight text-gray-400">
                         {c.descricao}
                       </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className={label}>Tipo de gás refrigerante</label>
+              <div className="flex flex-wrap gap-1.5">
+                {GASES_REFRIGERANTES.map((g) => {
+                  const ativo = form.tipoGas === g;
+                  return (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setForm({ ...form, tipoGas: g })}
+                      className={
+                        "rounded-full border px-3 py-1.5 text-xs font-semibold transition " +
+                        (ativo
+                          ? "border-blue-700 bg-blue-700 text-white"
+                          : "border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50")
+                      }
+                    >
+                      {g}
                     </button>
                   );
                 })}
@@ -477,6 +527,11 @@ export default function ListaEquipamentos() {
                 {eq.categoriaSistema && (
                   <span className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">
                     {eq.categoriaSistema}
+                  </span>
+                )}
+                {eq.tipoGas && (
+                  <span className="inline-block rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
+                    {eq.tipoGas}
                   </span>
                 )}
                 <span className="inline-block rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-800">
