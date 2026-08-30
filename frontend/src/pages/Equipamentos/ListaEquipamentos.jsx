@@ -17,8 +17,36 @@ import { TIPOS_EQUIPAMENTO } from "../../data/checklistsEquipamento";
 
 const TIPOS = TIPOS_EQUIPAMENTO;
 
+const CATEGORIAS_SISTEMA = [
+  {
+    valor: "Gás",
+    label: "Gás",
+    descricao: "Expansão direta",
+    icone: (
+      <path d="M12 2c-.3 2.6-1.7 4-3 5.4C7.4 9.1 6 10.9 6 13.5 6 17.6 8.7 21 12 21s6-3.4 6-7.5c0-1.9-.7-3.2-1.6-4.4-.2 1.6-1 2.6-1.9 2.6-1 0-1.5-.8-1.5-1.8 0-1.7 1-2.9 1-4.9 0-1.4-.7-2.5-2-3z" />
+    ),
+  },
+  {
+    valor: "Hidrônico",
+    label: "Hidrônico",
+    descricao: "Água gelada",
+    icone: (
+      <path d="M12 2s6 7.1 6 11.5a6 6 0 1 1-12 0C6 9.1 12 2 12 2z" />
+    ),
+  },
+  {
+    valor: "VRF",
+    label: "VRF",
+    descricao: "Fluxo de refrigerante variável",
+    icone: (
+      <path d="M12 2v20M12 2 9 5m3-3 3 3M12 22l-3-3m3 3 3-3M2 12h20M2 12l3-3M2 12l3 3M22 12l-3-3m3 3-3 3" />
+    ),
+  },
+];
+
 const VAZIO = {
   nome: "",
+  categoriaSistema: "",
   tipo: "Split Hi-Wall",
   marca: "",
   modelo: "",
@@ -126,6 +154,7 @@ export default function ListaEquipamentos() {
     try {
       const dados = {
         nome: form.nome.trim(),
+        categoriaSistema: form.categoriaSistema,
         tipo: form.tipo,
         marca: form.marca.trim(),
         modelo: form.modelo.trim(),
@@ -201,6 +230,44 @@ export default function ListaEquipamentos() {
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className={label}>Categoria do sistema</label>
+              <div className="grid grid-cols-3 gap-2">
+                {CATEGORIAS_SISTEMA.map((c) => {
+                  const ativo = form.categoriaSistema === c.valor;
+                  return (
+                    <button
+                      key={c.valor}
+                      type="button"
+                      onClick={() => setForm({ ...form, categoriaSistema: c.valor })}
+                      className={
+                        "flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-center transition " +
+                        (ativo
+                          ? "border-blue-700 bg-blue-50 text-blue-800"
+                          : "border-gray-300 text-gray-500 hover:border-gray-400 hover:bg-gray-50")
+                      }
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-6 w-6"
+                      >
+                        {c.icone}
+                      </svg>
+                      <span className="text-xs font-semibold">{c.label}</span>
+                      <span className="text-[10px] leading-tight text-gray-400">
+                        {c.descricao}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="sm:col-span-2">
               <label className={label}>Cliente / edifício</label>
               <select
@@ -406,8 +473,15 @@ export default function ListaEquipamentos() {
               key={eq.id}
               className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
             >
-              <div className="mb-2 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-800">
-                {eq.tipo}
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {eq.categoriaSistema && (
+                  <span className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">
+                    {eq.categoriaSistema}
+                  </span>
+                )}
+                <span className="inline-block rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-800">
+                  {eq.tipo}
+                </span>
               </div>
               <h3 className="text-base font-bold text-gray-900">{eq.nome}</h3>
               <p className="mt-1 text-sm text-gray-600">
