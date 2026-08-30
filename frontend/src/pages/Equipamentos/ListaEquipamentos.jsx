@@ -256,65 +256,67 @@ export default function ListaEquipamentos() {
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label className={label}>Categoria do sistema</label>
-              <div className="grid grid-cols-3 gap-2">
-                {CATEGORIAS_SISTEMA.map((c) => {
-                  const ativo = form.categoriaSistema === c.valor;
-                  return (
-                    <button
-                      key={c.valor}
-                      type="button"
-                      onClick={() => setForm({ ...form, categoriaSistema: c.valor })}
-                      className={
-                        "flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-center transition " +
-                        (ativo
-                          ? "border-blue-700 bg-blue-50 text-blue-800"
-                          : "border-gray-300 text-gray-500 hover:border-gray-400 hover:bg-gray-50")
-                      }
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-6 w-6"
+            <div className="sm:col-span-2 space-y-4 rounded-lg border border-gray-300 bg-gray-50/50 p-4">
+              <div>
+                <label className={label}>Categoria do sistema</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {CATEGORIAS_SISTEMA.map((c) => {
+                    const ativo = form.categoriaSistema === c.valor;
+                    return (
+                      <button
+                        key={c.valor}
+                        type="button"
+                        onClick={() => setForm({ ...form, categoriaSistema: c.valor })}
+                        className={
+                          "flex flex-col items-center gap-1 rounded-lg border bg-white px-2 py-3 text-center transition " +
+                          (ativo
+                            ? "border-blue-700 bg-blue-50 text-blue-800"
+                            : "border-gray-300 text-gray-500 hover:border-gray-400 hover:bg-gray-50")
+                        }
                       >
-                        {c.icone}
-                      </svg>
-                      <span className="text-xs font-semibold">{c.label}</span>
-                      <span className="text-[10px] leading-tight text-gray-400">
-                        {c.descricao}
-                      </span>
-                    </button>
-                  );
-                })}
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-6 w-6"
+                        >
+                          {c.icone}
+                        </svg>
+                        <span className="text-xs font-semibold">{c.label}</span>
+                        <span className="text-[10px] leading-tight text-gray-400">
+                          {c.descricao}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            <div className="sm:col-span-2">
-              <label className={label}>Tipo de gás refrigerante</label>
-              <div className="flex flex-wrap gap-1.5">
-                {GASES_REFRIGERANTES.map((g) => {
-                  const ativo = form.tipoGas === g;
-                  return (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={() => setForm({ ...form, tipoGas: g })}
-                      className={
-                        "rounded-full border px-3 py-1.5 text-xs font-semibold transition " +
-                        (ativo
-                          ? "border-blue-700 bg-blue-700 text-white"
-                          : "border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50")
-                      }
-                    >
-                      {g}
-                    </button>
-                  );
-                })}
+              <div>
+                <label className={label}>Tipo de gás refrigerante</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {GASES_REFRIGERANTES.map((g) => {
+                    const ativo = form.tipoGas === g;
+                    return (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setForm({ ...form, tipoGas: g })}
+                        className={
+                          "rounded-full border bg-white px-3 py-1.5 text-xs font-semibold transition " +
+                          (ativo
+                            ? "border-blue-700 bg-blue-700 text-white"
+                            : "border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50")
+                        }
+                      >
+                        {g}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
