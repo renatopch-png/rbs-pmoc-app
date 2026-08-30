@@ -256,68 +256,36 @@ export default function ListaEquipamentos() {
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2 space-y-4 rounded-lg border border-gray-300 bg-gray-50/50 p-4">
-              <div>
-                <label className={label}>Categoria do sistema</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {CATEGORIAS_SISTEMA.map((c) => {
-                    const ativo = form.categoriaSistema === c.valor;
-                    return (
-                      <button
-                        key={c.valor}
-                        type="button"
-                        onClick={() => setForm({ ...form, categoriaSistema: c.valor })}
-                        className={
-                          "flex flex-col items-center gap-1 rounded-lg border bg-white px-2 py-3 text-center transition " +
-                          (ativo
-                            ? "border-blue-700 bg-blue-50 text-blue-800"
-                            : "border-gray-300 text-gray-500 hover:border-gray-400 hover:bg-gray-50")
-                        }
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-6 w-6"
-                        >
-                          {c.icone}
-                        </svg>
-                        <span className="text-xs font-semibold">{c.label}</span>
-                        <span className="text-[10px] leading-tight text-gray-400">
-                          {c.descricao}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+            <div>
+              <label className={label}>Categoria do sistema</label>
+              <select
+                className={input}
+                value={form.categoriaSistema}
+                onChange={(e) => setForm({ ...form, categoriaSistema: e.target.value })}
+              >
+                <option value="">Selecione a categoria</option>
+                {CATEGORIAS_SISTEMA.map((c) => (
+                  <option key={c.valor} value={c.valor}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              <div>
-                <label className={label}>Tipo de gás refrigerante</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {GASES_REFRIGERANTES.map((g) => {
-                    const ativo = form.tipoGas === g;
-                    return (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={() => setForm({ ...form, tipoGas: g })}
-                        className={
-                          "rounded-full border bg-white px-3 py-1.5 text-xs font-semibold transition " +
-                          (ativo
-                            ? "border-blue-700 bg-blue-700 text-white"
-                            : "border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50")
-                        }
-                      >
-                        {g}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+            <div>
+              <label className={label}>Tipo de gás refrigerante</label>
+              <select
+                className={input}
+                value={form.tipoGas}
+                onChange={(e) => setForm({ ...form, tipoGas: e.target.value })}
+              >
+                <option value="">Selecione o gás</option>
+                {GASES_REFRIGERANTES.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="sm:col-span-2">
