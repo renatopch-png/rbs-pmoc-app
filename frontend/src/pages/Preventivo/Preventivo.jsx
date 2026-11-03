@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { CheckCircle2, MessageCircle, Pause, Pencil, Play, Plus, Repeat, Trash2, Wrench } from "lucide-react";
+import { CheckCircle2, HandCoins, MessageCircle, Pause, Pencil, Play, Plus, Repeat, Trash2, Wrench } from "lucide-react";
 import { db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { modulo } from "../../data/menu";
+import { gerarCobranca } from "../../lib/cobrancas";
+import { mesReferencia } from "../../lib/financeiro";
+import { brl } from "../../lib/orcamentos";
 import { PERIODICIDADES, dataBR, lerColecao, linkWhatsApp, paraInput, somarPeriodo, statusPreventivo } from "../../lib/modulos";
 import { BOTAO, BOTAO_SEC, Badge, Busca, CAMPO, Cabecalho, Campo, Erro, Filtros, Painel, Vazio } from "../../components/ui";
 
@@ -23,6 +26,7 @@ const VAZIO = {
   clienteId: "", clienteNome: "", clienteTelefone: "", equipamentoIds: [],
   servico: SERVICOS[0], periodicidade: "Trimestral", proximaData: paraInput(new Date()),
   horario: "", responsavel: "", valor: "", observacoes: "", ativo: true,
+  cobrancaMensal: false, diaVencimento: 10,
 };
 
 export default function Preventivo() {
@@ -96,7 +100,8 @@ export default function Preventivo() {
     setSalvando(true);
     const { st, id, ...resto } = form;
     const nomesEquip = equipamentos.filter((x) => resto.equipamentoIds.includes(x.id)).map((x) => [x.nome || x.tipo, x.local].filter(Boolean).join(" — "));
-    const dados = { ...resto, equipamentoNomes: nomesEquip, valor: resto.valor === "" ? "" : Number(resto.valor) };
+    const dados = { ...resto, equipamentoNomes: nomesEquip, valor: resto.valor === "" ? "" : Number(resto.valor), diaVencimento: Number(resto.diaVencimento) || 10 };
+    if (dados.cobrancaMensal && !(dados.valor > 0)) { setErro("Informe o valor mensal do contrato para gerar a cobrança."); setSalvando(false); return; }
     try {
       if (editandoId) await updateDoc(doc(db, "preventivos", editandoId), dados);
       else await addDoc(collection(db, "preventivos"), { ...dados, historico: [], criadoEm: serverTimestamp() });
@@ -117,6 +122,13 @@ export default function Preventivo() {
     try {
       const historico = [...(p.historico || []), { prevista: p.proximaData, realizada: paraInput(new Date()) }].slice(-24);
       await updateDoc(doc(db, "preventivos", p.id), { proximaData: proxima, ultimaExecucao: paraInput(new Date()), historico });
+      // Contrato com cobrança mensal: a execução já gera a cobrança do mês no Financeiro.
+      if (isAdmin && p.cobrancaMensal && Number(p.valor) > 0) {
+        const mes = mesReferencia();
+        const visitas = historico.filter((h) => h.realizada.startsWith(mes)).length;
+        const nova = await gerarCobranca({ ...p, historico }, mes, { total: visitas });
+        if (nova) window.alert(`Cobrança de ${brl(p.valor)} gerada em Financeiro › Cobranças PMOC.`);
+      }
       await carregar();
     } catch (e) {
       setErro("Não foi possível atualizar: " + e.message);
@@ -185,6 +197,9 @@ export default function Preventivo() {
                     {p.equipamentoNomes?.length > 0 && <span>• {p.equipamentoNomes.length} equip.</span>}
                   </p>
                   {p.ultimaExecucao && <p className="text-xs text-slate-400">Última: {dataBR(p.ultimaExecucao)}</p>}
+                  {isAdmin && p.cobrancaMensal && Number(p.valor) > 0 && (
+                    <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700"><HandCoins size={12} /> {brl(p.valor)}/mês • vence dia {p.diaVencimento || 10}</p>
+                  )}
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap justify-end gap-1 border-t border-slate-100 pt-2">
@@ -249,9 +264,21 @@ export default function Preventivo() {
               <datalist id="responsaveis">{funcionarios.map((f) => <option key={f.id} value={f.nome} />)}</datalist>
             </Campo>
             {isAdmin && (
-              <Campo rotulo="Valor por visita (R$)">
-                <input type="number" min="0" step="0.01" className={CAMPO} value={form.valor} onChange={(e) => mudar("valor", e.target.value)} />
-              </Campo>
+              <fieldset className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 sm:col-span-2">
+                <label className="flex items-center gap-2 text-sm font-bold text-emerald-900">
+                  <input type="checkbox" checked={!!form.cobrancaMensal} onChange={(e) => mudar("cobrancaMensal", e.target.checked)} />
+                  Gerar cobrança mensal no Financeiro (contrato PMOC)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Campo rotulo={form.cobrancaMensal ? "Valor mensal do contrato (R$) *" : "Valor do contrato (R$/mês)"}>
+                    <input type="number" min="0" step="0.01" className={CAMPO} value={form.valor} onChange={(e) => mudar("valor", e.target.value)} />
+                  </Campo>
+                  <Campo rotulo="Dia do vencimento">
+                    <input type="number" min="1" max="31" className={CAMPO} value={form.diaVencimento} onChange={(e) => mudar("diaVencimento", e.target.value)} />
+                  </Campo>
+                </div>
+                {form.cobrancaMensal && <p className="text-xs text-emerald-800">A cada mês com serviço executado (OS ou “Realizado”), a cobrança aparece em <b>Financeiro › Cobranças PMOC</b>. Ao receber, a entrada é lançada automaticamente.</p>}
+              </fieldset>
             )}
             <Campo rotulo="Observações" className="sm:col-span-2">
               <textarea rows={2} className={CAMPO} value={form.observacoes} onChange={(e) => mudar("observacoes", e.target.value)} />

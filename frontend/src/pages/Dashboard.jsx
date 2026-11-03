@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import {
-  AlertTriangle, Bell, Calendar, CalendarClock, CalendarDays, DollarSign, Eye, EyeOff,
+  AlertTriangle, Bell, HandCoins, Calendar, CalendarClock, CalendarDays, DollarSign, Eye, EyeOff,
   FileText, ShieldAlert, StickyNote, Wrench,
 } from "lucide-react";
 import { db } from "../services/firebase";
@@ -12,6 +12,7 @@ import { MENU, CONFIGURACOES } from "../data/menu";
 import { agendaSemanal, paraData } from "../lib/agenda";
 import { brl } from "../lib/orcamentos";
 import LinhaOrcamento from "../components/orcamentos/LinhaOrcamento";
+import { statusCobranca } from "../lib/cobrancas";
 import { diasAte, lerColecao, statusGarantia, statusPreventivo } from "../lib/modulos";
 import { Selo } from "../components/ui";
 
@@ -55,6 +56,7 @@ export default function Dashboard() {
   const [preventivos, setPreventivos] = useState([]);
   const [garantias, setGarantias] = useState([]);
   const [anotacoes, setAnotacoes] = useState([]);
+  const [cobrancas, setCobrancas] = useState([]);
   const [semana, setSemana] = useState(() => agendaSemanal([], []));
   const [ocultarValor, setOcultarValor] = useState(lerPreferencia);
 
@@ -83,6 +85,7 @@ export default function Dashboard() {
         setSemana(agendaSemanal([], [], new Date(), prev));
       }
       await carregarOrcamentos();
+      if (isAdmin) setCobrancas(await lerColecao("cobrancas"));
       if (usuario?.uid) {
         try {
           const snap = await getDocs(query(collection(db, "anotacoes"), where("criadoPor", "==", usuario.uid)));
@@ -119,6 +122,7 @@ export default function Dashboard() {
   const prevSemana = stPrev.filter((s) => s.dias !== null && s.dias >= 0 && s.dias <= 7).length;
   const garVencendo = [...garantias, ...orcamentos.filter((o) => o.garantiaValidaAte).map((o) => ({ dataFim: o.garantiaValidaAte }))]
     .filter((g) => statusGarantia(g).rotulo === "Vencendo").length;
+  const cobVencidas = cobrancas.filter((c) => statusCobranca(c).vencida).length;
   const lembretes = anotacoes.filter((n) => !n.concluida && n.lembreteEm && diasAte(n.lembreteEm) <= 0).length;
 
   return (
@@ -156,11 +160,12 @@ export default function Dashboard() {
       {/* Pendências do dia */}
       <section>
         <h2 className="mb-2 flex items-center gap-1.5 px-1 text-sm font-extrabold uppercase tracking-wide text-slate-500"><AlertTriangle size={15} /> Precisa de atenção</h2>
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+        <div className={`grid grid-cols-2 gap-2 ${isAdmin ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
           <Alerta to="/preventivo" icone={CalendarClock} valor={prevAtrasados} rotulo="Preventivos atrasados" tom="red" />
           <Alerta to="/preventivo" icone={CalendarDays} valor={prevSemana} rotulo="Preventivos em 7 dias" tom="blue" />
           <Alerta to="/garantias" icone={ShieldAlert} valor={garVencendo} rotulo="Garantias vencendo" tom="amber" />
           <Alerta to="/anotacoes" icone={Bell} valor={lembretes} rotulo="Lembretes para hoje" tom="violet" />
+          {isAdmin && <Alerta to="/financeiro/cobrancas" icone={HandCoins} valor={cobVencidas} rotulo="Cobranças PMOC vencidas" tom="red" />}
         </div>
       </section>
 

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import {
-  ArrowDownLeft, ArrowUpRight, BarChart3, CalendarDays, ChevronLeft, ChevronRight, Eye, EyeOff, FileText, Plus,
+  ArrowDownLeft, ArrowUpRight, BarChart3, ClipboardCheck, CalendarDays, ChevronLeft, ChevronRight, Eye, EyeOff, FileText, Plus,
 } from "lucide-react";
 import { auth, db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
@@ -117,7 +117,8 @@ export default function Financeiro() {
         <ChevronRight size={18} className="text-slate-400" />
       </button>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <Atalho to="/financeiro/cobrancas" icone={ClipboardCheck} rotulo="Cobranças PMOC" cor="from-blue-700 to-blue-900" />
         <Atalho to="/financeiro/extrato?tipo=entrada" icone={ArrowDownLeft} rotulo="Entradas" cor="from-emerald-500 to-green-700" />
         <Atalho to="/financeiro/extrato?tipo=saida" icone={ArrowUpRight} rotulo="Saídas" cor="from-red-500 to-red-700" />
         <Atalho to="/financeiro/contas-fixas" icone={CalendarDays} rotulo="Contas Fixas" cor="from-violet-500 to-indigo-700" />
