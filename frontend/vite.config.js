@@ -42,6 +42,10 @@ export default defineConfig({
         // cache básico dos arquivos do app; dados do Firestore continuam
         // exigindo internet (não há cache offline de dados neste momento)
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        // Versão nova assume na hora e apaga os arquivos antigos do cache.
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
       },
     }),
   ],
