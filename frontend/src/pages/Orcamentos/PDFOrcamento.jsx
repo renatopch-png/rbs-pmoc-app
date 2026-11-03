@@ -35,7 +35,10 @@ function TabelaItens({ titulo, itens }) {
       <tbody>
         {itens.map((item, i) => (
           <tr key={i} style={{ background: i % 2 ? "#EFF6FF" : "#fff" }}>
-            <td style={celula}>{item.descricao}</td>
+            <td style={celula}>
+              {item.descricao}
+              {item.equipamentoNome && !item.descricao.includes(item.equipamentoNome) && <div style={{ fontSize: 9.5, color: "#0e7490" }}>Equipamento: {item.equipamentoNome}</div>}
+            </td>
             <td style={{ ...celula, textAlign: "right" }}>{item.qtd} {item.unidade}</td>
             <td style={{ ...celula, textAlign: "right" }}>{brl(item.valorUnit)}</td>
             <td style={{ ...celula, textAlign: "right" }}>{brl(totalItem(item))}</td>
