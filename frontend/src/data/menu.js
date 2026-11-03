@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Plus, History, CalendarDays, Users, Snowflake, Wrench, Wallet, Tag,
-  ShieldCheck, CalendarClock, FileText, ClipboardList, ClipboardCheck, ReceiptText,
-  UsersRound, CircleHelp, Settings,
+  ShieldCheck, CalendarClock, FileText, ClipboardList, ClipboardCheck,
+  UsersRound, Settings,
 } from "lucide-react";
 
 // Módulos com `novo: true` ainda não existem: abrem a página "Em breve".
@@ -20,9 +20,7 @@ export const MENU = [
   { to: "/laudos", label: "Relatórios Técnicos", icon: FileText, novo: true, desc: "Criar relatórios", cor: "from-green-500 to-green-700" },
   { to: "/anotacoes", label: "Anotações", icon: ClipboardList, novo: true, desc: "Lembretes e tarefas", cor: "from-purple-500 to-violet-700" },
   { to: "/relatorios", label: "PMOC", icon: ClipboardCheck, desc: "Plano de manutenção", cor: "from-blue-700 to-blue-900" },
-  { to: "/nota-fiscal", admin: true, label: "Nota Fiscal", icon: ReceiptText, novo: true, desc: "Emissão de notas fiscais", cor: "from-pink-500 to-rose-700" },
   { to: "/equipe", label: "Equipe", icon: UsersRound, desc: "Equipe e permissões", cor: "from-blue-500 to-indigo-700" },
-  { to: "/duvidas", label: "Dúvidas técnicas", icon: CircleHelp, novo: true, desc: "Base técnica", cor: "from-sky-500 to-cyan-700" },
 ];
 
 export const CONFIGURACOES = { to: "/configuracoes", admin: true, label: "Configurações", icon: Settings, desc: "Ajustes do app", cor: "from-slate-500 to-slate-700" };
