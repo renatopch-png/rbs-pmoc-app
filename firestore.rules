@@ -91,8 +91,30 @@ service cloud.firestore {
     match /lancamentos/{lancamentoId} {
       allow read, write: if request.auth != null && ehAdmin();
     }
+    // Cobranças mensais dos contratos PMOC (viram lançamento ao receber).
+    match /cobrancas/{cobrancaId} {
+      allow read, write: if request.auth != null && ehAdmin();
+    }
     match /contas_fixas/{contaId} {
       allow read, write: if request.auth != null && ehAdmin();
+    }
+    // Módulos: Garantias, Cadastro Preventivo e Relatórios Técnicos.
+    match /garantias/{garantiaId} {
+      allow read, create, update: if autorizado();
+      allow delete: if request.auth != null && ehAdmin();
+    }
+    match /preventivos/{preventivoId} {
+      allow read, create, update: if autorizado();
+      allow delete: if request.auth != null && ehAdmin();
+    }
+    match /laudos/{laudoId} {
+      allow read, create, update: if autorizado();
+      allow delete: if request.auth != null && ehAdmin();
+    }
+    // Anotações são pessoais: cada usuário só vê e altera as próprias.
+    match /anotacoes/{anotacaoId} {
+      allow read, update, delete: if autorizado() && resource.data.criadoPor == request.auth.uid;
+      allow create: if autorizado() && request.resource.data.criadoPor == request.auth.uid;
     }
     match /plano_atividades/{planoId} {
       allow read, write: if request.auth != null && estaAutorizado();

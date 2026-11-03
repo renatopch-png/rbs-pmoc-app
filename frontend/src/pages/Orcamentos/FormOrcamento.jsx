@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
-import { FileDown, Plus, Trash2 } from "lucide-react";
+import { FileDown, Plus, Snowflake, Trash2 } from "lucide-react";
 import { auth, db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { STATUS, TIPOS_ITEM, brl, calcularTotais, numeroFmt, proximoNumero, totalItem } from "../../lib/orcamentos";
 
 const CAMPO = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
-const NOVO_ITEM = { descricao: "", tipo: "Mão de Obra", qtd: 1, unidade: "un", valorUnit: "" };
+const NOVO_ITEM = { descricao: "", tipo: "Mão de Obra", qtd: 1, unidade: "un", valorUnit: "", equipamentoId: "", equipamentoNome: "" };
+// Rótulo do equipamento usado no item e no PDF (ex.: "Split Hi-Wall • 12.000 BTU/h • Sala 2").
+const nomeEquipamento = (e) => [e.nome || e.tipo, e.capacidade, e.local].filter(Boolean).join(" • ");
 const INICIAL = {
   clienteId: "", objeto: "", escopo: "", descricaoDetalhada: "", status: "Rascunho",
   itens: [{ ...NOVO_ITEM }], frete: "", desconto: "",
@@ -32,6 +34,7 @@ export default function FormOrcamento() {
   const [numero, setNumero] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [precos, setPrecos] = useState([]);
+  const [equipamentos, setEquipamentos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
@@ -41,6 +44,8 @@ export default function FormOrcamento() {
       try {
         const snapCli = await getDocs(collection(db, "clientes"));
         setClientes(snapCli.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR")));
+        const snapEq = await getDocs(collection(db, "equipamentos"));
+        setEquipamentos(snapEq.docs.map((d) => ({ id: d.id, ...d.data() })));
         const snapPrecos = await getDocs(collection(db, "tabela_precos"));
         setPrecos(snapPrecos.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")));
         if (id) {
@@ -60,6 +65,32 @@ export default function FormOrcamento() {
 
   const totais = useMemo(() => calcularTotais(form.itens, form.desconto, form.frete), [form.itens, form.desconto, form.frete]);
   const mudar = (campo, valor) => setForm((f) => ({ ...f, [campo]: valor }));
+  const equipDoCliente = useMemo(
+    () => equipamentos.filter((e) => e.clienteId === form.clienteId).sort((a, b) => nomeEquipamento(a).localeCompare(nomeEquipamento(b), "pt-BR")),
+    [equipamentos, form.clienteId],
+  );
+  // Trocar de cliente desfaz o vínculo dos itens com equipamentos do cliente anterior.
+  const mudarCliente = (clienteId) => setForm((f) => ({
+    ...f, clienteId, itens: f.itens.map((it) => ({ ...it, equipamentoId: "", equipamentoNome: "" })),
+  }));
+  function vincularEquipamento(i, equipamentoId) {
+    const e = equipamentos.find((x) => x.id === equipamentoId);
+    setForm((f) => ({ ...f, itens: f.itens.map((it, n) => (n === i ? { ...it, equipamentoId: e?.id || "", equipamentoNome: e ? nomeEquipamento(e) : "" } : it)) }));
+  }
+  // Atalho para contratos de manutenção: um item por equipamento do cliente.
+  function itemPorEquipamento() {
+    if (!equipDoCliente.length) return;
+    const servico = window.prompt("Serviço para cada equipamento:", "Manutenção preventiva mensal (PMOC)");
+    if (!servico) return;
+    setForm((f) => {
+      const semVazio = f.itens.filter((it) => it.descricao.trim() || it.valorUnit !== "");
+      const jaTem = new Set(semVazio.map((it) => it.equipamentoId).filter(Boolean));
+      const novos = equipDoCliente.filter((e) => !jaTem.has(e.id)).map((e) => ({
+        ...NOVO_ITEM, descricao: `${servico} — ${nomeEquipamento(e)}`, equipamentoId: e.id, equipamentoNome: nomeEquipamento(e),
+      }));
+      return { ...f, itens: [...semVazio, ...novos] };
+    });
+  }
   const mudarItem = (i, campo, valor) => setForm((f) => ({ ...f, itens: f.itens.map((it, n) => (n === i ? { ...it, [campo]: valor } : it)) }));
   const removerItem = (i) => setForm((f) => ({ ...f, itens: f.itens.filter((_, n) => n !== i) }));
   const adicionarItem = (item = NOVO_ITEM) => setForm((f) => {
@@ -80,7 +111,10 @@ export default function FormOrcamento() {
     if (totais.valorTotal < 0) return setErro("O desconto é maior que o total.");
     setSalvando(true);
     setErro("");
-    const normalizados = itens.map((i) => ({ ...i, descricao: i.descricao.trim(), qtd: Number(i.qtd) || 0, valorUnit: Number(i.valorUnit) || 0 }));
+    const normalizados = itens.map((i) => ({
+      ...i, descricao: i.descricao.trim(), qtd: Number(i.qtd) || 0, valorUnit: Number(i.valorUnit) || 0,
+      equipamentoId: i.equipamentoId || "", equipamentoNome: i.equipamentoNome || "",
+    }));
     const dados = {
       ...form,
       itens: normalizados,
@@ -91,6 +125,7 @@ export default function FormOrcamento() {
       clienteEndereco: cliente.endereco || "",
       clienteTelefone: cliente.telefone || "",
       qtdServicos: normalizados.length,
+      equipamentoIds: [...new Set(normalizados.map((i) => i.equipamentoId).filter(Boolean))],
       atualizadoEm: serverTimestamp(),
     };
     try {
@@ -132,7 +167,7 @@ export default function FormOrcamento() {
       <Bloco titulo="Identificação">
         <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
           <Campo rotulo="Cliente">
-            <select required className={CAMPO} value={form.clienteId} onChange={(e) => mudar("clienteId", e.target.value)}>
+            <select required className={CAMPO} value={form.clienteId} onChange={(e) => mudarCliente(e.target.value)}>
               <option value="">Selecione</option>
               {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
             </select>
@@ -162,9 +197,24 @@ export default function FormOrcamento() {
             <input aria-label="Valor unitário" type="number" min="0" step="0.01" placeholder="R$" className={`${CAMPO} col-span-2 sm:col-span-1`} value={item.valorUnit} onChange={(e) => mudarItem(i, "valorUnit", e.target.value)} />
             <p className="self-center text-right text-sm font-bold text-green-700">{brl(totalItem(item))}</p>
             <button type="button" aria-label="Remover item" className="justify-self-end p-1 text-red-600" onClick={() => removerItem(i)}><Trash2 size={16} /></button>
+            {form.clienteId && (
+              <label className="col-span-3 flex items-center gap-2 sm:col-span-7">
+                <Snowflake size={16} className={`shrink-0 ${item.equipamentoId ? "text-cyan-600" : "text-slate-300"}`} />
+                <select aria-label="Equipamento do item" className={`${CAMPO} ${item.equipamentoId ? "border-cyan-300 bg-cyan-50/50" : "text-slate-500"}`} value={item.equipamentoId || ""} onChange={(e) => vincularEquipamento(i, e.target.value)}>
+                  <option value="">{equipDoCliente.length ? "Sem vínculo com equipamento" : "Cliente sem equipamentos cadastrados"}</option>
+                  {equipDoCliente.map((e) => <option key={e.id} value={e.id}>{nomeEquipamento(e)}</option>)}
+                  {item.equipamentoId && !equipDoCliente.some((e) => e.id === item.equipamentoId) && <option value={item.equipamentoId}>{item.equipamentoNome}</option>}
+                </select>
+              </label>
+            )}
           </div>
         ))}
-        <button type="button" onClick={() => adicionarItem()} className="inline-flex items-center gap-1 text-sm font-bold text-blue-700"><Plus size={16} /> Adicionar item</button>
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
+          <button type="button" onClick={() => adicionarItem()} className="inline-flex items-center gap-1 text-sm font-bold text-blue-700"><Plus size={16} /> Adicionar item</button>
+          {equipDoCliente.length > 0 && (
+            <button type="button" onClick={itemPorEquipamento} className="inline-flex items-center gap-1 text-sm font-bold text-cyan-700"><Snowflake size={16} /> Um item por equipamento ({equipDoCliente.length})</button>
+          )}
+        </div>
       </Bloco>
 
       <Bloco titulo="Investimento">

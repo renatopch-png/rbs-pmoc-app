@@ -14,7 +14,8 @@ export function inicioDaSemana(hoje = new Date()) {
 }
 
 // Mesma regra do Agendador: última OS do equipamento + periodicidade.
-export function agendaSemanal(equipamentos, ordens, hoje = new Date()) {
+// Os itens do Cadastro Preventivo entram pela data da próxima visita.
+export function agendaSemanal(equipamentos, ordens, hoje = new Date(), preventivos = []) {
   const inicio = inicioDaSemana(hoje);
   const dias = Array.from({ length: 7 }, (_, i) => {
     const data = new Date(inicio);
@@ -34,6 +35,13 @@ export function agendaSemanal(equipamentos, ordens, hoje = new Date()) {
     proxima.setHours(0, 0, 0, 0);
     const dia = dias.find((d) => d.data.getTime() === proxima.getTime());
     if (dia) dia.servicos.push(eq);
+  });
+
+  preventivos.filter((p) => p.ativo !== false && p.proximaData).forEach((p) => {
+    const [a, m, d] = String(p.proximaData).split("-").map(Number);
+    const data = new Date(a, m - 1, d);
+    const dia = dias.find((x) => x.data.getTime() === data.getTime());
+    if (dia) dia.servicos.push({ id: `prev-${p.id}`, nome: `${p.clienteNome} • ${p.servico}`, preventivo: true });
   });
   return dias;
 }

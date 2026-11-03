@@ -23,12 +23,18 @@ import FormOrcamento from "./pages/Orcamentos/FormOrcamento";
 import PDFOrcamento from "./pages/Orcamentos/PDFOrcamento";
 import ReciboOrcamento from "./pages/Orcamentos/ReciboOrcamento";
 import GarantiaOrcamento from "./pages/Orcamentos/GarantiaOrcamento";
-import Garantias from "./pages/Orcamentos/Garantias";
 import TabelaPrecos from "./pages/Orcamentos/TabelaPrecos";
 import Financeiro from "./pages/Financeiro/Financeiro";
 import Extrato from "./pages/Financeiro/Extrato";
 import ContasFixas from "./pages/Financeiro/ContasFixas";
+import CobrancasPMOC from "./pages/Financeiro/CobrancasPMOC";
 import GestaoEquipe from "./pages/Equipe/GestaoEquipe";
+import Garantias from "./pages/Garantias/Garantias";
+import Preventivo from "./pages/Preventivo/Preventivo";
+import ListaLaudos from "./pages/Laudos/ListaLaudos";
+import FormLaudo from "./pages/Laudos/FormLaudo";
+import PDFLaudo from "./pages/Laudos/PDFLaudo";
+import Anotacoes from "./pages/Anotacoes/Anotacoes";
 import { MODULOS_EM_BREVE } from "./data/menu";
 
 function Privada({ children }) {
@@ -62,12 +68,19 @@ export default function App() {
         <Route path="/orcamentos/:id/pdf" element={<Privada><PDFOrcamento /></Privada>} />
         <Route path="/orcamentos/:id/recibo" element={<Privada><ReciboOrcamento /></Privada>} />
         <Route path="/orcamentos/:id/garantia" element={<Privada><GarantiaOrcamento /></Privada>} />
-        <Route path="/garantias" element={<Privada><Garantias /></Privada>} />
         <Route path="/tabela-precos" element={<Privada><TabelaPrecos /></Privada>} />
         <Route path="/financeiro" element={<Privada><Financeiro /></Privada>} />
         <Route path="/financeiro/extrato" element={<Privada><Extrato /></Privada>} />
+        <Route path="/financeiro/cobrancas" element={<Privada><CobrancasPMOC /></Privada>} />
         <Route path="/financeiro/contas-fixas" element={<Privada><ContasFixas /></Privada>} />
         <Route path="/equipe" element={<Privada><GestaoEquipe /></Privada>} />
+        <Route path="/garantias" element={<Privada><Garantias /></Privada>} />
+        <Route path="/preventivo" element={<Privada><Preventivo /></Privada>} />
+        <Route path="/laudos" element={<Privada><ListaLaudos /></Privada>} />
+        <Route path="/laudos/novo" element={<Privada><FormLaudo /></Privada>} />
+        <Route path="/laudos/:id" element={<Privada><FormLaudo /></Privada>} />
+        <Route path="/laudos/:id/pdf" element={<Privada><PDFLaudo /></Privada>} />
+        <Route path="/anotacoes" element={<Privada><Anotacoes /></Privada>} />
         <Route path="/configuracoes" element={<Privada><Configuracoes /></Privada>} />
         {MODULOS_EM_BREVE.map((m) => (
           <Route key={m.to} path={m.to} element={<Privada><EmBreve modulo={m} /></Privada>} />
