@@ -16,6 +16,8 @@ import GeradorART from "./pages/Relatorios/GeradorART";
 import GeradorContrato from "./pages/Relatorios/GeradorContrato";
 import Agendador from "./pages/Relatorios/Agendador";
 import Relatorios from "./pages/Relatorios/Relatorios";
+import EmBreve from "./pages/EmBreve";
+import { MODULOS_EM_BREVE } from "./data/menu";
 
 function Privada({ children }) {
   return <ProtectedRoute><AppLayout>{children}</AppLayout></ProtectedRoute>;
@@ -42,6 +44,9 @@ export default function App() {
         <Route path="/relatorios/art/:osId" element={<Privada><GeradorART /></Privada>} />
         <Route path="/relatorios/contrato/:clienteId" element={<Privada><GeradorContrato /></Privada>} />
         <Route path="/relatorios" element={<Privada><Relatorios /></Privada>} />
+        {MODULOS_EM_BREVE.map((m) => (
+          <Route key={m.to} path={m.to} element={<Privada><EmBreve modulo={m} /></Privada>} />
+        ))}
       </Routes>
       <InstallBanner />
     </>

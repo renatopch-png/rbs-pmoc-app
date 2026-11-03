@@ -9,6 +9,8 @@ export default {
           light: "#EFF6FF",   // fundo de linhas alternadas / faixas claras
           DEFAULT: "#0B5394", // azul de títulos de seção
           dark: "#1E40AF",    // azul escuro de cabeçalhos de tabela
+          navy: "#12304F",    // menu lateral
+          sky: "#E8F3FC",     // fundo geral do app
         },
       },
     },
