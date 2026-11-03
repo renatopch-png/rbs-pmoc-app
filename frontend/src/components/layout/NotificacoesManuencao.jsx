@@ -22,6 +22,9 @@ export default function NotificacoesManuencao() {
         // Busca todos os equipamentos
         const snapEquip = await getDocs(collection(db, "equipamentos"));
         const equipamentos = snapEquip.docs.map((d) => ({ id: d.id, ...d.data() }));
+        // O equipamento guarda só o clienteId: o nome vem do cadastro de clientes.
+        const snapCli = await getDocs(collection(db, "clientes"));
+        const nomeCliente = new Map(snapCli.docs.map((d) => [d.id, d.data().nome]));
 
         // Busca todas as ordens de serviço
         const snapOS = await getDocs(collection(db, "ordens_servico"));
@@ -53,7 +56,7 @@ export default function NotificacoesManuencao() {
                 equipamentoId: eq.id,
                 equipamentoNome: eq.nome,
                 clienteId: eq.clienteId,
-                clienteNome: eq.clienteNome || "—",
+                clienteNome: nomeCliente.get(eq.clienteId) || eq.clienteNome || "Sem cliente",
                 diasAtrasada: diasAtrasada,
                 ultimaManutencao: dataUltimaOS,
               });
@@ -64,7 +67,7 @@ export default function NotificacoesManuencao() {
               equipamentoId: eq.id,
               equipamentoNome: eq.nome,
               clienteId: eq.clienteId,
-              clienteNome: eq.clienteNome || "—",
+              clienteNome: nomeCliente.get(eq.clienteId) || eq.clienteNome || "Sem cliente",
               diasAtrasada: "Nunca",
               ultimaManutencao: null,
             });
@@ -135,6 +138,9 @@ export function NotificacoesBanner() {
       try {
         const snapEquip = await getDocs(collection(db, "equipamentos"));
         const equipamentos = snapEquip.docs.map((d) => ({ id: d.id, ...d.data() }));
+        // O equipamento guarda só o clienteId: o nome vem do cadastro de clientes.
+        const snapCli = await getDocs(collection(db, "clientes"));
+        const nomeCliente = new Map(snapCli.docs.map((d) => [d.id, d.data().nome]));
 
         const snapOS = await getDocs(collection(db, "ordens_servico"));
         const ordens = snapOS.docs.map((d) => ({ id: d.id, ...d.data() }));
