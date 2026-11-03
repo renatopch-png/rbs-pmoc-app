@@ -22,6 +22,9 @@ import ListaOrcamentos from "./pages/Orcamentos/ListaOrcamentos";
 import FormOrcamento from "./pages/Orcamentos/FormOrcamento";
 import PDFOrcamento from "./pages/Orcamentos/PDFOrcamento";
 import TabelaPrecos from "./pages/Orcamentos/TabelaPrecos";
+import Financeiro from "./pages/Financeiro/Financeiro";
+import Extrato from "./pages/Financeiro/Extrato";
+import ContasFixas from "./pages/Financeiro/ContasFixas";
 import { MODULOS_EM_BREVE } from "./data/menu";
 
 function Privada({ children }) {
@@ -54,6 +57,9 @@ export default function App() {
         <Route path="/orcamentos/:id" element={<Privada><FormOrcamento /></Privada>} />
         <Route path="/orcamentos/:id/pdf" element={<Privada><PDFOrcamento /></Privada>} />
         <Route path="/tabela-precos" element={<Privada><TabelaPrecos /></Privada>} />
+        <Route path="/financeiro" element={<Privada><Financeiro /></Privada>} />
+        <Route path="/financeiro/extrato" element={<Privada><Extrato /></Privada>} />
+        <Route path="/financeiro/contas-fixas" element={<Privada><ContasFixas /></Privada>} />
         <Route path="/configuracoes" element={<Privada><Configuracoes /></Privada>} />
         {MODULOS_EM_BREVE.map((m) => (
           <Route key={m.to} path={m.to} element={<Privada><EmBreve modulo={m} /></Privada>} />

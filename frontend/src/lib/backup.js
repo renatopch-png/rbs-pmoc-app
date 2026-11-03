@@ -2,7 +2,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../services/firebase";
 
 const ESSENCIAIS = ["clientes", "equipamentos", "ordens_servico"];
-const OPCIONAIS = ["plano_atividades", "orcamentos", "tabela_precos", "contadores", "historico_publico"];
+const OPCIONAIS = ["plano_atividades", "orcamentos", "tabela_precos", "contadores", "historico_publico", "lancamentos", "contas_fixas"];
 
 function serializar(v) {
   if (v?.toDate) return { __data: v.toDate().toISOString() };

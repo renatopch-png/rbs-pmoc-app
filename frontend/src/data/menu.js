@@ -13,7 +13,7 @@ export const MENU = [
   { to: "/clientes", label: "Clientes", icon: Users, desc: "Clientes e edifícios", cor: "from-indigo-500 to-blue-700" },
   { to: "/equipamentos", label: "Equipamentos", icon: Snowflake, desc: "Cadastro e QR Code", cor: "from-cyan-500 to-sky-700" },
   { to: "/ordens-servico", label: "Ordens de Serviço", icon: Wrench, desc: "Executar e consultar", cor: "from-orange-400 to-orange-700" },
-  { to: "/financeiro", label: "Financeiro", icon: Wallet, novo: true, desc: "Receitas e despesas", cor: "from-teal-400 to-cyan-700" },
+  { to: "/financeiro", label: "Financeiro", icon: Wallet, desc: "Receitas e despesas", cor: "from-teal-400 to-cyan-700" },
   { to: "/tabela-precos", label: "Tabela de Preços", icon: Tag, desc: "Gerenciar serviços", cor: "from-teal-500 to-emerald-700" },
   { to: "/garantias", label: "Garantias", icon: ShieldCheck, novo: true, desc: "Ver garantias ativas", cor: "from-amber-500 to-yellow-700" },
   { to: "/preventivo", label: "Cadastro Preventivo", icon: CalendarClock, novo: true, desc: "Manutenções recorrentes", cor: "from-orange-500 to-red-600" },

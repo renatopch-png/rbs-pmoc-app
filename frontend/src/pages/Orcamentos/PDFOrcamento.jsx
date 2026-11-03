@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
-import { ArrowLeft, Download, MessageCircle } from "lucide-react";
+import { ArrowLeft, Download, HandCoins, MessageCircle } from "lucide-react";
 import html2pdf from "html2pdf.js";
 import { db } from "../../services/firebase";
+import { useAuth } from "../../context/AuthContext";
 import { DADOS_RBS } from "../../services/ServicoWhatsApp";
 import { paraData } from "../../lib/agenda";
 import { CONDICAO_ETAPAS, brl, numeroFmt, totalItem } from "../../lib/orcamentos";
@@ -51,6 +52,8 @@ function TabelaItens({ titulo, itens }) {
 
 export default function PDFOrcamento() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const corpo = useRef(null);
   const [o, setO] = useState(null);
   const [erro, setErro] = useState("");
@@ -151,12 +154,29 @@ export default function PDFOrcamento() {
     window.open(`https://wa.me/${numero}?text=${texto}`, "_blank");
   }
 
+  function registrarRecebimento() {
+    navigate("/financeiro", {
+      state: {
+        novoLancamento: {
+          tipo: "entrada",
+          descricao: `Orçamento #${numeroFmt(o.numero)} - ${o.clienteNome}`,
+          categoria: "Serviços",
+          valor: o.valorTotal,
+          orcamentoId: o.id,
+        },
+      },
+    });
+  }
+
   return (
     <div className="mx-auto max-w-[210mm] space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <Link to={`/orcamentos/${id}`} className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"><ArrowLeft size={16} /> Editar</Link>
         <button onClick={baixar} disabled={gerando} className="inline-flex items-center gap-1 rounded-lg bg-rbs px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"><Download size={16} /> {gerando ? "Gerando..." : "Baixar PDF"}</button>
         <button onClick={whatsapp} className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white"><MessageCircle size={16} /> Enviar mensagem</button>
+        {isAdmin && (o.status === "Aprovado" || o.status === "Concluído") && (
+          <button onClick={registrarRecebimento} className="inline-flex items-center gap-1 rounded-lg border border-green-600 bg-white px-4 py-2 text-sm font-semibold text-green-700"><HandCoins size={16} /> Registrar recebimento</button>
+        )}
       </div>
       <div className="overflow-x-auto rounded-lg bg-white shadow-sm">
         <div className="min-w-[640px] border-b-2 border-rbs bg-rbs-light px-6 py-3">
