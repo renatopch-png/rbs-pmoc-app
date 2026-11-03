@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { CheckCircle2, HandCoins, MessageCircle, Pause, Pencil, Play, Plus, Repeat, Trash2, Wrench } from "lucide-react";
 import { db } from "../../services/firebase";
@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { modulo } from "../../data/menu";
 import { gerarCobranca } from "../../lib/cobrancas";
 import { mesReferencia } from "../../lib/financeiro";
-import { brl } from "../../lib/orcamentos";
+import { brl, numeroFmt } from "../../lib/orcamentos";
 import { PERIODICIDADES, dataBR, lerColecao, linkWhatsApp, paraInput, somarPeriodo, statusPreventivo } from "../../lib/modulos";
 import { BOTAO, BOTAO_SEC, Badge, Busca, CAMPO, Cabecalho, Campo, Erro, Filtros, Painel, Vazio } from "../../components/ui";
 
@@ -26,11 +26,14 @@ const VAZIO = {
   clienteId: "", clienteNome: "", clienteTelefone: "", equipamentoIds: [],
   servico: SERVICOS[0], periodicidade: "Trimestral", proximaData: paraInput(new Date()),
   horario: "", responsavel: "", valor: "", observacoes: "", ativo: true,
-  cobrancaMensal: false, diaVencimento: 10,
+  cobrancaMensal: false, diaVencimento: 10, orcamentoId: "", orcamentoNumero: null,
 };
 
 export default function Preventivo() {
   const { isAdmin } = useAuth();
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const [aviso, setAviso] = useState("");
   const [lista, setLista] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [equipamentos, setEquipamentos] = useState([]);
@@ -55,6 +58,30 @@ export default function Preventivo() {
     setCarregando(false);
   }
   useEffect(() => { carregar(); }, []);
+
+  // Vindo do orçamento ("Agendar"/"Agendado"): abre o formulário já preenchido
+  // ou o agendamento existente. O estado da navegação é limpo para não reabrir.
+  useEffect(() => {
+    if (carregando || !state) return;
+    const { deOrcamento: o, abrirId } = state;
+    navigate(".", { replace: true, state: null });
+    const existente = lista.find((p) => p.id === abrirId || (o && p.orcamentoId === o.id));
+    if (existente) { setFiltro("todos"); abrir(existente); return; }
+    if (!o) return;
+    const c = clientes.find((x) => x.id === o.clienteId);
+    const equipIds = o.equipamentoIds?.length ? o.equipamentoIds : [...new Set((o.itens || []).map((i) => i.equipamentoId).filter(Boolean))];
+    setErro("");
+    setEditandoId(null);
+    setAviso(`Agendamento do orçamento #${numeroFmt(o.numero)}. Confira a data da primeira visita.`);
+    setForm({
+      ...VAZIO,
+      clienteId: o.clienteId || "", clienteNome: o.clienteNome || c?.nome || "", clienteTelefone: o.clienteTelefone || c?.telefone || "",
+      equipamentoIds: equipIds, servico: o.objeto || "Manutenção preventiva mensal (PMOC)", periodicidade: "Mensal",
+      valor: o.valorTotal ?? "", cobrancaMensal: isAdmin && Number(o.valorTotal) > 0,
+      orcamentoId: o.id, orcamentoNumero: o.numero ?? null,
+      observacoes: `Gerado a partir do orçamento #${numeroFmt(o.numero)}.`,
+    });
+  }, [carregando]); // eslint-disable-line
 
   const comStatus = useMemo(() => lista
     .map((p) => ({ ...p, st: statusPreventivo(p) }))
@@ -104,7 +131,12 @@ export default function Preventivo() {
     if (dados.cobrancaMensal && !(dados.valor > 0)) { setErro("Informe o valor mensal do contrato para gerar a cobrança."); setSalvando(false); return; }
     try {
       if (editandoId) await updateDoc(doc(db, "preventivos", editandoId), dados);
-      else await addDoc(collection(db, "preventivos"), { ...dados, historico: [], criadoEm: serverTimestamp() });
+      else {
+        const novo = await addDoc(collection(db, "preventivos"), { ...dados, historico: [], criadoEm: serverTimestamp() });
+        // Marca o orçamento como agendado (botão vira "Agendado").
+        if (dados.orcamentoId) await updateDoc(doc(db, "orcamentos", dados.orcamentoId), { preventivoId: novo.id }).catch(() => {});
+      }
+      setAviso("");
       setForm(null);
       await carregar();
     } catch (e2) {
@@ -163,6 +195,7 @@ export default function Preventivo() {
       </Cabecalho>
 
       <Erro>{!form && erro}</Erro>
+      {aviso && !form && <p role="status" className="rounded-xl bg-green-50 p-3 text-sm font-semibold text-green-800">{aviso}</p>}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Busca valor={busca} aoMudar={setBusca} placeholder="Buscar cliente, serviço, responsável..." />
         <Filtros valor={filtro} aoMudar={setFiltro} opcoes={[
@@ -225,6 +258,11 @@ export default function Preventivo() {
         <Painel titulo={editandoId ? "Editar preventivo" : "Novo preventivo"} aoFechar={() => setForm(null)}>
           <form onSubmit={salvar} className="grid gap-3 sm:grid-cols-2">
             <Erro>{erro}</Erro>
+            {form.orcamentoId && (
+              <p className="rounded-xl bg-orange-50 p-2 text-xs font-semibold text-orange-800 sm:col-span-2">
+                🔁 Vinculado ao orçamento #{numeroFmt(form.orcamentoNumero)}. A data da próxima visita avança sozinha quando a OS de um equipamento do contrato é executada ou quando você marca “Realizado”.
+              </p>
+            )}
             <Campo rotulo="Cliente *" className="sm:col-span-2">
               <select required className={CAMPO} value={form.clienteId} onChange={(e) => mudar("clienteId", e.target.value)}>
                 <option value="">Selecione...</option>
