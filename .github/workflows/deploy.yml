@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  # Permite rodar o deploy manualmente pela aba Actions do GitHub.
+  workflow_dispatch:
 
 jobs:
   build_and_deploy:
@@ -41,3 +43,14 @@ jobs:
           projectId: rbs-pmoc
           # Versão fixa: as mais novas exigem permissão extra na conta de serviço.
           firebaseToolsVersion: 15.28.2
+
+      # Publica as regras do Firestore (o passo acima publica só o site).
+      # A conta de serviço precisa da função "Firebase Rules Admin" no projeto.
+      - name: Deploy Firestore rules
+        env:
+          FIREBASE_SA: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+        run: |
+          printf '%s' "$FIREBASE_SA" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx --yes firebase-tools@15.28.2 deploy --only firestore:rules --project rbs-pmoc --non-interactive
+          rm -f "$RUNNER_TEMP/sa.json"
