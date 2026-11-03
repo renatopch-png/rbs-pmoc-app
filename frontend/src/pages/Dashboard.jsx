@@ -12,7 +12,8 @@ import { MENU, CONFIGURACOES } from "../data/menu";
 import { agendaSemanal, paraData } from "../lib/agenda";
 import { brl } from "../lib/orcamentos";
 import LinhaOrcamento from "../components/orcamentos/LinhaOrcamento";
-import { garantirCobrancasDoMes, statusCobranca } from "../lib/cobrancas";
+import { garantirCobrancasDoMes, resumoAReceber, statusCobranca } from "../lib/cobrancas";
+import { dataDoLancamento, mesReferencia } from "../lib/financeiro";
 import { diasAte, lerColecao, statusGarantia, statusPreventivo } from "../lib/modulos";
 import { Selo } from "../components/ui";
 
@@ -57,6 +58,7 @@ export default function Dashboard() {
   const [garantias, setGarantias] = useState([]);
   const [anotacoes, setAnotacoes] = useState([]);
   const [cobrancas, setCobrancas] = useState([]);
+  const [lancamentos, setLancamentos] = useState([]);
   const [semana, setSemana] = useState(() => agendaSemanal([], []));
   const [ocultarValor, setOcultarValor] = useState(lerPreferencia);
 
@@ -91,6 +93,7 @@ export default function Dashboard() {
         const ordensLidas = await lerColecao("ordens_servico");
         const geradas = await garantirCobrancasDoMes(prev, c0, ordensLidas).catch(() => 0);
         setCobrancas(geradas ? await lerColecao("cobrancas") : c0);
+        setLancamentos(await lerColecao("lancamentos"));
       }
       if (usuario?.uid) {
         try {
@@ -128,6 +131,11 @@ export default function Dashboard() {
   const prevSemana = stPrev.filter((s) => s.dias !== null && s.dias >= 0 && s.dias <= 7).length;
   const garVencendo = [...garantias, ...orcamentos.filter((o) => o.garantiaValidaAte).map((o) => ({ dataFim: o.garantiaValidaAte }))]
     .filter((g) => statusGarantia(g).rotulo === "Vencendo").length;
+  const mesAtual = mesReferencia();
+  const recebidoMes = lancamentos
+    .filter((l) => l.tipo === "entrada" && dataDoLancamento(l) && mesReferencia(dataDoLancamento(l)) === mesAtual)
+    .reduce((t, l) => t + Math.round((Number(l.valor) || 0) * 100), 0) / 100;
+  const aReceber = resumoAReceber(cobrancas);
   const cobVencidas = cobrancas.filter((c) => statusCobranca(c).vencida).length;
   const lembretes = anotacoes.filter((n) => !n.concluida && n.lembreteEm && diasAte(n.lembreteEm) <= 0).length;
 
@@ -150,15 +158,23 @@ export default function Dashboard() {
             <p className="text-2xl font-extrabold">{aprovadosMes}</p>
           </div>
           {isAdmin && (
-            <div className="col-span-2 rounded-2xl bg-white/10 p-3 backdrop-blur">
-              <p className="flex items-center gap-1 text-xs text-blue-100">
-                <DollarSign size={13} /> Valor do mês
-                <button aria-label={ocultarValor ? "Mostrar valor" : "Ocultar valor"} onClick={alternarValor} className="ml-auto rounded-full bg-white/15 p-1">
-                  {ocultarValor ? <EyeOff size={14} /> : <Eye size={14} />}
-                </button>
-              </p>
-              <p className="text-2xl font-extrabold">{ocultarValor ? "R$ •••••" : brl(valorMes)}</p>
-            </div>
+            <>
+              <Link to="/financeiro" className="rounded-2xl bg-white/10 p-3 backdrop-blur transition hover:bg-white/20">
+                <p className="flex items-center gap-1 text-xs text-blue-100">
+                  <DollarSign size={13} /> Recebido no mês
+                  <button aria-label={ocultarValor ? "Mostrar valores" : "Ocultar valores"} onClick={(e) => { e.preventDefault(); alternarValor(); }} className="ml-auto rounded-full bg-white/15 p-1">
+                    {ocultarValor ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </p>
+                <p className="text-2xl font-extrabold text-emerald-200">{ocultarValor ? "R$ •••••" : brl(recebidoMes)}</p>
+                <p className="text-[11px] text-blue-100">Entradas lançadas no Financeiro</p>
+              </Link>
+              <Link to="/financeiro/cobrancas" className="rounded-2xl bg-white/10 p-3 backdrop-blur transition hover:bg-white/20">
+                <p className="text-xs text-blue-100">A receber (PMOC)</p>
+                <p className="text-2xl font-extrabold text-amber-200">{ocultarValor ? "R$ •••••" : brl(aReceber.aReceber)}</p>
+                <p className="text-[11px] text-blue-100">{aReceber.qtdAbertas} cobrança(s){aReceber.qtdVencidas ? ` • ${aReceber.qtdVencidas} vencida(s)` : ""} • orçamentos {ocultarValor ? "•••" : brl(valorMes)}</p>
+              </Link>
+            </>
           )}
         </div>
       </header>

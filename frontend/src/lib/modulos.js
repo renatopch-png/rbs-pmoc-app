@@ -113,7 +113,7 @@ export async function avancarPreventivosDoEquipamento(equipamentoId, hoje = new 
   for (const d of snap.docs) {
     const p = d.data();
     const dias = diasAte(p.proximaData);
-    if (p.ativo === false || dias === null || dias > 7) continue;
+    if (p.ativo === false || dias === null || dias > 7 || p.ultimaExecucao === hojeStr) continue;
     const historico = [...(p.historico || []), { prevista: p.proximaData, realizada: hojeStr, origem: "OS" }].slice(-24);
     await updateDoc(doc(db, "preventivos", d.id), {
       proximaData: paraInput(somarPeriodo(p.proximaData, p.periodicidade)), ultimaExecucao: hojeStr, historico,
