@@ -12,6 +12,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
       - name: Preparar
         env:
           SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
@@ -19,7 +23,10 @@ jobs:
           umask 077
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
           printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
-          cd .github/manutencao && npm init -y >/dev/null && npm i firebase-admin firebase-tools@15.28.2 --no-audit --no-fund --silent
+          cd .github/manutencao && npm init -y >/dev/null && npm i firebase-admin firebase firebase-tools@15.28.2 @firebase/rules-unit-testing --no-audit --no-fund --silent
+      - name: Testar regras no emulador
+        working-directory: .github/manutencao
+        run: env -u GOOGLE_APPLICATION_CREDENTIALS npx firebase emulators:exec --project demo-rbs --only firestore --config emul.json "node emul.mjs"
       - name: Publicar regras
         working-directory: .github/manutencao
         run: node run.mjs regras

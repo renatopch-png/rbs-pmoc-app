@@ -49,16 +49,6 @@ if (acao === "regras") {
     });
     console.log("NOVO", nomeRelease.split("/releases/")[1], rs.name.split("/").pop());
   };
-  const { CASOS } = await import("./casos.mjs");
-  const fonte = { files: [{ name: "firestore.rules", content: readFileSync("../../firestore.rules", "utf8") }] };
-  const res = await req("POST", "https://firebaserules.googleapis.com/v1/projects/rbs-pmoc:test", { source: fonte, testSuite: { testCases: CASOS.map((x) => x.caso) } });
-  if (res.issues?.length) res.issues.forEach((i) => console.log("ISSUE", i.severity, i.description));
-  let falhas = 0;
-  (res.testResults || []).forEach((r, i) => {
-    if (r.state !== "SUCCESS") { falhas += 1; console.log("CASO FALHOU:", CASOS[i].nome, CASOS[i].caso.expectation, (r.debugMessages || []).join(" | ").slice(0, 200)); }
-  });
-  console.log(`CASOS ${CASOS.length - falhas}/${CASOS.length}`);
-  if (falhas || (res.testResults || []).length !== CASOS.length) throw new Error("Regras reprovadas: publicacao cancelada");
   const fs_ = rel.find((r) => r.name.endsWith("/cloud.firestore"));
   if (!fs_) throw new Error("release nao encontrado");
   await publicar("../../firestore.rules", fs_.name);
