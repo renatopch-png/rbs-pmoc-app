@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, CircleAlert, FilePlus2, HandCoins, MessageCircle, RotateCcw, Trash2,
+  ArrowLeft, CheckCircle2, FileText, ChevronLeft, ChevronRight, CircleAlert, FilePlus2, HandCoins, MessageCircle, RotateCcw, Trash2,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { brl } from "../../lib/orcamentos";
@@ -11,6 +11,7 @@ import {
   contratosCobraveis, estornarCobranca, excluirCobranca, execucoesDoMes, gerarCobranca, idCobranca,
   mensagemCobranca, nomeMes, receberCobranca, somarMes, statusCobranca,
 } from "../../lib/cobrancas";
+import { lerConfigPix } from "../../lib/pix";
 import { BOTAO, BOTAO_SEC, Badge, CAMPO, Campo, Painel, Vazio } from "../../components/ui";
 
 export default function CobrancasPMOC() {
@@ -23,6 +24,7 @@ export default function CobrancasPMOC() {
   const [ocupado, setOcupado] = useState("");
   const [aviso, setAviso] = useState(null);
   const [recebendo, setRecebendo] = useState(null);
+  const [pix, setPix] = useState(null);
 
   async function carregar() {
     const [p, o, c] = await Promise.all([lerColecao("preventivos"), lerColecao("ordens_servico"), lerColecao("cobrancas")]);
@@ -31,7 +33,7 @@ export default function CobrancasPMOC() {
     setCobrancas(c);
     setCarregando(false);
   }
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => { carregar(); lerConfigPix().then(setPix); }, []);
 
   const contratos = contratosCobraveis(preventivos);
   const porId = useMemo(() => new Map(cobrancas.map((c) => [c.id, c])), [cobrancas]);
@@ -153,9 +155,10 @@ export default function CobrancasPMOC() {
                 </div>
                 <div className="mt-3 flex flex-wrap justify-end gap-1 border-t border-slate-100 pt-2">
                   {!c && <button disabled={!!ocupado} onClick={() => gerar({ contrato, exec })} className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100"><FilePlus2 size={14} /> Gerar cobrança</button>}
+                  {c && <Link to={`/financeiro/cobrancas/${c.id}`} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-50"><FileText size={14} /> Demonstrativo</Link>}
                   {c && c.status !== "Pago" && (
                     <>
-                      {c.clienteTelefone && <a href={linkWhatsApp(c.clienteTelefone, mensagemCobranca(c))} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-green-700 hover:bg-green-50"><MessageCircle size={14} /> Enviar cobrança</a>}
+                      {c.clienteTelefone && <a href={linkWhatsApp(c.clienteTelefone, mensagemCobranca(c, pix))} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-green-700 hover:bg-green-50"><MessageCircle size={14} /> Enviar cobrança</a>}
                       <button disabled={!!ocupado} onClick={() => setRecebendo({ cobranca: c, forma: "Pix", data: paraInputData() })} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 hover:bg-emerald-100"><HandCoins size={14} /> Receber</button>
                       <button disabled={!!ocupado} aria-label="Excluir cobrança" onClick={() => excluir(c)} className="rounded-lg px-2 py-1 text-red-600 hover:bg-red-50"><Trash2 size={14} /></button>
                     </>

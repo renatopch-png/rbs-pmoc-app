@@ -3,6 +3,7 @@ import { DatabaseBackup, RefreshCw } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { baixarArquivo, gerarBackup } from "../lib/backup";
 import { sincronizarTodos } from "../lib/historicoPublico";
+import ConfigPix from "../components/ConfigPix";
 
 export default function Configuracoes() {
   const { isAdmin } = useAuth();
@@ -37,6 +38,7 @@ export default function Configuracoes() {
     <div className="mx-auto max-w-3xl space-y-3">
       <h1 className="text-2xl font-extrabold text-rbs-navy">Configurações</h1>
       {aviso && <p role="status" className={`rounded-xl p-3 text-sm font-semibold ${aviso.ok ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>{aviso.texto}</p>}
+      <ConfigPix />
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="font-bold text-rbs-navy">Backup do banco de dados</h2>
         <p className="mt-1 text-sm text-gray-600">Baixa um arquivo com os registros do sistema, sem alterar nada. Fotos e assinaturas ficam no Storage; o arquivo guarda apenas os links delas.</p>
