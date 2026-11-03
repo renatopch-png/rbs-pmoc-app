@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { CheckCircle2, HandCoins, MessageCircle, Pause, Pencil, Play, Plus, Repeat, Trash2, Wrench } from "lucide-react";
+import { CheckCircle2, HandCoins, Undo2, MessageCircle, Pause, Pencil, Play, Plus, Repeat, Trash2, Wrench } from "lucide-react";
 import { db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { modulo } from "../../data/menu";
@@ -149,6 +149,10 @@ export default function Preventivo() {
   // Registra a execução e já agenda a próxima a partir da data prevista
   // (mantém o calendário fixo mesmo quando a visita atrasa alguns dias).
   async function concluir(p) {
+    if (p.ultimaExecucao === paraInput(new Date())) {
+      window.alert(`Este contrato já foi marcado como realizado hoje (próxima visita: ${dataBR(p.proximaData)}).\nSe marcou por engano, use "Desfazer".`);
+      return;
+    }
     const proxima = paraInput(somarPeriodo(p.proximaData, p.periodicidade));
     if (!window.confirm(`Marcar "${p.servico}" de ${p.clienteNome} como realizado hoje?\nPróxima visita: ${dataBR(proxima)}`)) return;
     try {
@@ -164,6 +168,22 @@ export default function Preventivo() {
       await carregar();
     } catch (e) {
       setErro("Não foi possível atualizar: " + e.message);
+    }
+  }
+
+  // Volta a última marcação de "Realizado" (ou avanço por OS): restaura a data prevista.
+  async function desfazer(p) {
+    const hist = [...(p.historico || [])];
+    const ultimo = hist.pop();
+    if (!ultimo?.prevista) return;
+    if (!window.confirm(`Desfazer a última execução (${dataBR(ultimo.realizada)})?\nA próxima visita volta para ${dataBR(ultimo.prevista)}.`)) return;
+    try {
+      await updateDoc(doc(db, "preventivos", p.id), {
+        proximaData: ultimo.prevista, historico: hist, ultimaExecucao: hist.length ? hist[hist.length - 1].realizada : "",
+      });
+      await carregar();
+    } catch (e) {
+      setErro("Não foi possível desfazer: " + e.message);
     }
   }
 
@@ -245,6 +265,7 @@ export default function Preventivo() {
                     <MessageCircle size={14} /> Confirmar
                   </a>
                 )}
+                {p.historico?.length > 0 && <button onClick={() => desfazer(p)} title="Desfazer a última execução" className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-slate-600 hover:bg-slate-100"><Undo2 size={14} /> Desfazer</button>}
                 <button onClick={() => abrir(p)} aria-label="Editar" className="rounded-lg px-2 py-1 text-rbs hover:bg-blue-50"><Pencil size={14} /></button>
                 <button onClick={() => alternarAtivo(p)} aria-label={p.ativo === false ? "Reativar" : "Pausar"} className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100">{p.ativo === false ? <Play size={14} /> : <Pause size={14} />}</button>
                 {isAdmin && <button onClick={() => excluir(p)} aria-label="Excluir" className="rounded-lg px-2 py-1 text-red-600 hover:bg-red-50"><Trash2 size={14} /></button>}
