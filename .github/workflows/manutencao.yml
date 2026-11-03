@@ -1,0 +1,33 @@
+name: Manutencao unica
+on:
+  push:
+    branches: [manutencao-unica]
+permissions:
+  contents: read
+jobs:
+  executar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Preparar
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          umask 077
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          cd .github/manutencao && npm init -y >/dev/null && npm i firebase-admin firebase-tools@15.28.2 --no-audit --no-fund --silent
+      - name: Publicar regras
+        working-directory: .github/manutencao
+        run: node run.mjs regras
+      - name: Testar acesso anonimo
+        working-directory: .github/manutencao
+        run: |
+          sleep 75
+          node run.mjs teste
+      - name: Limpar
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
