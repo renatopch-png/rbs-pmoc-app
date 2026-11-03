@@ -141,6 +141,12 @@ export default function ListaClientes() {
             </div>
             <div className="flex gap-2">
               <Link
+                to={`/manutencoes?cliente=${c.id}`}
+                className="text-xs text-sky-700 font-semibold"
+              >
+                🔧 Manutenções
+              </Link>
+              <Link
                 to={`/relatorios/pmoc-consolidado/${c.id}`}
                 className="text-xs text-blue-800 font-semibold"
               >
