@@ -175,6 +175,7 @@ export default function CentralManutencoes() {
                     {garantia && <Badge cor="bg-amber-50 text-amber-700">Garantia até {dataBR(fimGarantia(garantia))}</Badge>}
                   </p>
                 </div>
+                <Link to={`/etiquetas?cliente=${e.clienteId || ""}&eq=${e.id}`} className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200">🏷️ Etiqueta</Link>
                 <Link to={`/ordens-servico/executar/${e.id}`} className="inline-flex items-center gap-1 rounded-xl bg-orange-50 px-3 py-2 text-xs font-bold text-orange-700 hover:bg-orange-100"><Wrench size={14} /> Executar OS</Link>
               </li>
             ))}
