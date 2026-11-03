@@ -122,3 +122,21 @@ export async function avancarPreventivosDoEquipamento(equipamentoId, hoje = new 
   }
   return n;
 }
+
+// Próxima manutenção de um equipamento — regra única usada em Agenda,
+// avisos, Agenda Semanal, Etiquetas e Central de Manutenções:
+// 1) se o equipamento está num contrato ativo (Cadastro Preventivo), vale a
+//    data do contrato; 2) senão, última OS + periodicidade do equipamento.
+export function proximaManutencaoEquipamento(eq, ordens, preventivos = []) {
+  const ultima = ordens
+    .filter((o) => o.equipamentoId === eq.id)
+    .map((o) => paraData(o.dataExecucao))
+    .filter(Boolean)
+    .sort((a, b) => b - a)[0] || null;
+  const contrato = preventivos.find((p) => p.ativo !== false && (p.equipamentoIds || []).includes(eq.id) && p.proximaData) || null;
+  const periodicidade = contrato?.periodicidade || eq.periodicidade || "Mensal";
+  let proxima = null;
+  if (contrato) proxima = dataLocal(contrato.proximaData);
+  else if (ultima) { proxima = somarPeriodo(ultima, periodicidade); proxima.setHours(0, 0, 0, 0); }
+  return { ultima, proxima, contrato, periodicidade, dias: proxima ? diasAte(proxima) : null };
+}

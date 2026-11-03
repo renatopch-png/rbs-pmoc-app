@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../services/firebase";
-
-const PERIODICIDADES = {
-  Mensal: 30,
-  Bimestral: 60,
-  Trimestral: 90,
-  Semestral: 180,
-  Anual: 365,
-};
+import { lerColecao, proximaManutencaoEquipamento } from "../../lib/modulos";
 
 export default function NotificacoesManuencao() {
   const navigate = useNavigate();
@@ -30,48 +23,21 @@ export default function NotificacoesManuencao() {
         const snapOS = await getDocs(collection(db, "ordens_servico"));
         const ordens = snapOS.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-        // Calcula equipamentos com manutenção atrasada
+        const preventivos = await lerColecao("preventivos");
+
+        // Atrasado = próxima manutenção (contrato ou periodicidade) já passou.
         const equipamentosAtrasados = [];
-
         equipamentos.forEach((eq) => {
-          const ultimaOS = ordens
-            .filter((os) => os.equipamentoId === eq.id)
-            .sort((a, b) => {
-              const da = a.dataExecucao?.toDate?.() || new Date(0);
-              const db = b.dataExecucao?.toDate?.() || new Date(0);
-              return db - da;
-            })[0];
-
-          if (ultimaOS) {
-            const dataUltimaOS = ultimaOS.dataExecucao?.toDate?.() || new Date(ultimaOS.dataExecucao);
-            const periodicidade = eq.periodicidade || "Mensal";
-            const diasPeriodo = PERIODICIDADES[periodicidade] || 30;
-            const proximaData = new Date(dataUltimaOS);
-            proximaData.setDate(proximaData.getDate() + diasPeriodo);
-
-            // Se passou da data, está atrasada
-            if (proximaData < new Date()) {
-              const diasAtrasada = Math.ceil((new Date() - proximaData) / (1000 * 60 * 60 * 24));
-              equipamentosAtrasados.push({
-                equipamentoId: eq.id,
-                equipamentoNome: eq.nome,
-                clienteId: eq.clienteId,
-                clienteNome: nomeCliente.get(eq.clienteId) || eq.clienteNome || "Sem cliente",
-                diasAtrasada: diasAtrasada,
-                ultimaManutencao: dataUltimaOS,
-              });
-            }
-          } else {
-            // Nunca teve manutenção
-            equipamentosAtrasados.push({
-              equipamentoId: eq.id,
-              equipamentoNome: eq.nome,
-              clienteId: eq.clienteId,
-              clienteNome: nomeCliente.get(eq.clienteId) || eq.clienteNome || "Sem cliente",
-              diasAtrasada: "Nunca",
-              ultimaManutencao: null,
-            });
-          }
+          const r = proximaManutencaoEquipamento(eq, ordens, preventivos);
+          if (r.proxima && r.dias >= 0) return;
+          equipamentosAtrasados.push({
+            equipamentoId: eq.id,
+            equipamentoNome: eq.nome || eq.tipo || "Equipamento",
+            clienteId: eq.clienteId,
+            clienteNome: nomeCliente.get(eq.clienteId) || "Sem cliente",
+            diasAtrasada: r.proxima ? -r.dias : "Nunca",
+            ultimaManutencao: r.ultima,
+          });
         });
 
         // Ordena por dias atrasada (descendente)
@@ -129,49 +95,20 @@ export default function NotificacoesManuencao() {
   );
 }
 
-// Exportar componente compacto para banner
+// Banner compacto do painel: mesma regra da Agenda (contrato ou periodicidade).
 export function NotificacoesBanner() {
   const [totalAtrasadas, setTotalAtrasadas] = useState(0);
 
   useEffect(() => {
     (async () => {
       try {
-        const snapEquip = await getDocs(collection(db, "equipamentos"));
-        const equipamentos = snapEquip.docs.map((d) => ({ id: d.id, ...d.data() }));
-        // O equipamento guarda só o clienteId: o nome vem do cadastro de clientes.
-        const snapCli = await getDocs(collection(db, "clientes"));
-        const nomeCliente = new Map(snapCli.docs.map((d) => [d.id, d.data().nome]));
-
-        const snapOS = await getDocs(collection(db, "ordens_servico"));
-        const ordens = snapOS.docs.map((d) => ({ id: d.id, ...d.data() }));
-
-        let contador = 0;
-
-        equipamentos.forEach((eq) => {
-          const ultimaOS = ordens
-            .filter((os) => os.equipamentoId === eq.id)
-            .sort((a, b) => {
-              const da = a.dataExecucao?.toDate?.() || new Date(0);
-              const db = b.dataExecucao?.toDate?.() || new Date(0);
-              return db - da;
-            })[0];
-
-          if (ultimaOS) {
-            const dataUltimaOS = ultimaOS.dataExecucao?.toDate?.() || new Date(ultimaOS.dataExecucao);
-            const periodicidade = eq.periodicidade || "Mensal";
-            const diasPeriodo = PERIODICIDADES[periodicidade] || 30;
-            const proximaData = new Date(dataUltimaOS);
-            proximaData.setDate(proximaData.getDate() + diasPeriodo);
-
-            if (proximaData < new Date()) {
-              contador++;
-            }
-          } else {
-            contador++;
-          }
-        });
-
-        setTotalAtrasadas(contador);
+        const [equipamentos, ordens, preventivos] = await Promise.all([
+          lerColecao("equipamentos"), lerColecao("ordens_servico"), lerColecao("preventivos"),
+        ]);
+        setTotalAtrasadas(equipamentos.filter((eq) => {
+          const r = proximaManutencaoEquipamento(eq, ordens, preventivos);
+          return !r.proxima || r.dias < 0;
+        }).length);
       } catch (e) {
         console.error("Erro ao contar notificações:", e);
       }
@@ -183,14 +120,15 @@ export function NotificacoesBanner() {
   }
 
   return (
-    <div className="mb-6 flex items-center gap-3 rounded-xl border-l-4 border-red-500 bg-red-50 px-4 py-3">
+    <Link to="/cronograma" className="mb-6 flex items-center gap-3 rounded-xl border-l-4 border-red-500 bg-red-50 px-4 py-3 transition hover:bg-red-100">
       <span className="text-2xl">🚨</span>
       <div className="flex-1">
         <p className="font-bold text-red-900">
           {totalAtrasadas} equipamento{totalAtrasadas > 1 ? "s" : ""} com manutenção atrasada
         </p>
-        <p className="text-sm text-red-700">Clique em "Agendador" para ver detalhes e agendar</p>
+        <p className="text-sm text-red-700">Toque para ver na Agenda e chamar o cliente</p>
       </div>
-    </div>
+      <span className="text-sm font-bold text-red-800">Ver →</span>
+    </Link>
   );
 }

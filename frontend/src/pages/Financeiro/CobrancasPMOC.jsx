@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import {
   ArrowLeft, CheckCircle2, FileText, ChevronLeft, ChevronRight, CircleAlert, FilePlus2, HandCoins, MessageCircle, RotateCcw, Trash2,
 } from "lucide-react";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { brl } from "../../lib/orcamentos";
 import { FORMAS_PAGAMENTO, deInputData, mesReferencia, paraInputData } from "../../lib/financeiro";
 import { dataBR, lerColecao, linkWhatsApp } from "../../lib/modulos";
 import {
-  contratosCobraveis, estornarCobranca, excluirCobranca, execucoesDoMes, gerarCobranca, idCobranca,
+  contratosCobraveis, estornarCobranca, garantirCobrancasDoMes, excluirCobranca, execucoesDoMes, gerarCobranca, idCobranca,
   mensagemCobranca, nomeMes, receberCobranca, somarMes, statusCobranca,
 } from "../../lib/cobrancas";
 import { lerConfigPix } from "../../lib/pix";
@@ -27,7 +29,10 @@ export default function CobrancasPMOC() {
   const [pix, setPix] = useState(null);
 
   async function carregar() {
-    const [p, o, c] = await Promise.all([lerColecao("preventivos"), lerColecao("ordens_servico"), lerColecao("cobrancas")]);
+    const [p, o, c0] = await Promise.all([lerColecao("preventivos"), lerColecao("ordens_servico"), lerColecao("cobrancas")]);
+    let c = c0;
+    // Cobranças do mês atual são geradas sozinhas para os contratos ativos.
+    if (isAdmin && (await garantirCobrancasDoMes(p, c0, o).catch(() => 0)) > 0) c = await lerColecao("cobrancas");
     setPreventivos(p);
     setOrdens(o);
     setCobrancas(c);
@@ -57,6 +62,9 @@ export default function CobrancasPMOC() {
   const emAberto = soma((l) => l.cobranca && l.cobranca.status !== "Pago");
   const vencido = soma((l) => statusCobranca(l.cobranca).vencida);
   const prontas = linhas.filter((l) => l.contrato && !l.cobranca && l.exec.total > 0);
+  // Contratos com valor mas sem a opção de cobrança mensal marcada.
+  const semCobranca = preventivos.filter((p) => p.ativo !== false && !p.cobrancaMensal && Number(p.valor) > 0);
+  const ativarCobranca = (p) => executar(`ativar-${p.id}`, () => updateDoc(doc(db, "preventivos", p.id), { cobrancaMensal: true, diaVencimento: p.diaVencimento || 10 }), `Cobrança mensal ativada para ${p.clienteNome}.`);
 
   async function executar(chave, acao, sucesso) {
     setOcupado(chave);
@@ -119,6 +127,18 @@ export default function CobrancasPMOC() {
       </div>
 
       {aviso && <p role="status" className={`rounded-xl p-3 text-sm font-semibold ${aviso.ok ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>{aviso.texto}</p>}
+
+      {semCobranca.length > 0 && (
+        <div className="space-y-2 rounded-2xl border border-amber-200 bg-amber-50 p-3">
+          <p className="text-sm font-semibold text-amber-900">Estes contratos têm valor, mas a cobrança mensal não está ativada:</p>
+          {semCobranca.map((p) => (
+            <div key={p.id} className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="flex-1 font-bold text-amber-900">{p.clienteNome} — {p.servico} ({brl(p.valor)}/mês)</span>
+              <button disabled={!!ocupado} onClick={() => ativarCobranca(p)} className="rounded-lg bg-amber-600 px-3 py-1 text-xs font-bold text-white">Ativar cobrança</button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {prontas.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-3">

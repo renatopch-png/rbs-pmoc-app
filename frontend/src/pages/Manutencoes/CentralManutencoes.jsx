@@ -9,7 +9,7 @@ import { paraData } from "../../lib/agenda";
 import { mesReferencia } from "../../lib/financeiro";
 import { CORES_STATUS, brl, numeroFmt } from "../../lib/orcamentos";
 import { statusCobranca, nomeMes } from "../../lib/cobrancas";
-import { PERIODICIDADES, dataBR, diasAte, fimGarantia, lerColecao, paraInput, statusGarantia, statusPreventivo } from "../../lib/modulos";
+import { proximaManutencaoEquipamento, dataBR, diasAte, fimGarantia, lerColecao, paraInput, statusGarantia, statusPreventivo } from "../../lib/modulos";
 import { Badge, Busca, CAMPO, Cabecalho, Filtros, Vazio } from "../../components/ui";
 
 const MOD = modulo("/manutencoes");
@@ -71,14 +71,10 @@ export default function CentralManutencoes() {
     // Por equipamento: última OS, próxima visita (contrato ou periodicidade) e garantia ativa.
     const linhasEq = equipamentos.map((e) => {
       const ultima = ordens.find((o) => o.equipamentoId === e.id);
-      const contrato = preventivos.find((p) => p.ativo !== false && (p.equipamentoIds || []).includes(e.id));
-      let proxima = contrato?.proximaData || "";
-      if (!proxima && ultima) {
-        const d = paraData(ultima.dataExecucao);
-        if (d) { d.setDate(d.getDate() + (PERIODICIDADES[e.periodicidade] || 30)); proxima = paraInput(d); }
-      }
+      const r = proximaManutencaoEquipamento(e, ordens, preventivos);
+      const proxima = r.proxima ? paraInput(r.proxima) : "";
       const garantia = garantiasManuais.find((g) => g.equipamentoId === e.id && statusGarantia(g).rotulo !== "Vencida");
-      return { e, ultima, contrato, proxima, dias: diasAte(proxima), garantia, qtdOS: ordens.filter((o) => o.equipamentoId === e.id).length };
+      return { e, ultima, contrato: r.contrato, proxima, dias: r.dias, garantia, qtdOS: ordens.filter((o) => o.equipamentoId === e.id).length };
     }).sort((a, b) => (a.dias ?? 9999) - (b.dias ?? 9999));
 
     const mes = mesReferencia();

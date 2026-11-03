@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc, writeBatch } from "firebase/firestore";
 import { X } from "lucide-react";
 import { auth, db } from "../../services/firebase";
 import { CATEGORIAS, FORMAS_PAGAMENTO, dataDoLancamento, deInputData, paraInputData } from "../../lib/financeiro";
@@ -53,9 +53,19 @@ export default function LancamentoForm({ inicial, aoFechar, aoSalvar }) {
   }
 
   async function excluir() {
-    if (!window.confirm("Excluir este lançamento? Esta ação não pode ser desfeita.")) return;
+    const deCobranca = !!inicial.cobrancaId;
+    if (!window.confirm(deCobranca
+      ? "Excluir este recebimento? A cobrança PMOC volta para \"A receber\"."
+      : "Excluir este lançamento? Esta ação não pode ser desfeita.")) return;
     try {
-      await deleteDoc(doc(db, "lancamentos", inicial.id));
+      if (deCobranca) {
+        const lote = writeBatch(db);
+        lote.delete(doc(db, "lancamentos", inicial.id));
+        lote.update(doc(db, "cobrancas", inicial.cobrancaId), { status: "Pendente", formaPagamento: null, pagoEm: null, lancamentoId: null });
+        await lote.commit();
+      } else {
+        await deleteDoc(doc(db, "lancamentos", inicial.id));
+      }
       aoSalvar();
     } catch (e) {
       setErro("Não foi possível excluir: " + e.message);
