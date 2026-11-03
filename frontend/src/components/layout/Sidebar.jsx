@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { LogOut, X } from "lucide-react";
 import { logout } from "../../services/authService";
+import { useAuth } from "../../context/AuthContext";
 import { MENU, CONFIGURACOES, PAINEL } from "../../data/menu";
 
 function Item({ item, aoNavegar }) {
@@ -24,6 +25,7 @@ function Item({ item, aoNavegar }) {
 }
 
 export default function Sidebar({ aberto, aoFechar }) {
+  const { isAdmin } = useAuth();
   return (
     <>
       {aberto && <button aria-label="Fechar menu" onClick={aoFechar} className="fixed inset-0 z-30 bg-black/40 md:hidden" />}
@@ -42,10 +44,10 @@ export default function Sidebar({ aberto, aoFechar }) {
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-3">
           <Item item={PAINEL} aoNavegar={aoFechar} />
           <p className="px-4 pb-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-blue-100/60">Funções</p>
-          {MENU.map((m) => <Item key={m.to} item={m} aoNavegar={aoFechar} />)}
+          {MENU.filter((m) => isAdmin || !m.admin).map((m) => <Item key={m.to} item={m} aoNavegar={aoFechar} />)}
         </nav>
         <div className="space-y-0.5 border-t border-white/15 p-3">
-          <Item item={CONFIGURACOES} aoNavegar={aoFechar} />
+          {isAdmin && <Item item={CONFIGURACOES} aoNavegar={aoFechar} />}
           <button onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold text-blue-50/90 hover:bg-white/10">
             <LogOut size={18} /> Sair
           </button>

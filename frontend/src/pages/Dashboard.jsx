@@ -26,7 +26,7 @@ function Selo({ icone: Icone, cor }) {
 }
 
 export default function Dashboard() {
-  const { usuario } = useAuth();
+  const { usuario, isAdmin } = useAuth();
   const [orcamentos, setOrcamentos] = useState([]);
   const [semana, setSemana] = useState(() => agendaSemanal([], []));
   const [ocultarValor, setOcultarValor] = useState(lerPreferencia);
@@ -98,6 +98,7 @@ export default function Dashboard() {
           </div>
           <p className="mt-3 text-2xl font-extrabold text-rbs-navy">{doMes.length}</p>
         </section>
+        {isAdmin && (
         <section className="rounded-2xl bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <Selo icone={DollarSign} cor="from-emerald-500 to-green-700" />
@@ -108,6 +109,7 @@ export default function Dashboard() {
           </div>
           <p className="mt-3 text-2xl font-extrabold text-green-700">{ocultarValor ? "R$ •••••" : brl(valorMes)}</p>
         </section>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -115,7 +117,7 @@ export default function Dashboard() {
           <Selo icone={MENU[0].icon} cor={MENU[0].cor} />
           <span><span className="block font-bold text-rbs-navy">Criar Orçamento ou OS</span><span className="text-sm text-slate-500">{MENU[0].desc}</span></span>
         </Link>
-        {ATALHOS.map((m) => (
+        {ATALHOS.filter((m) => isAdmin || !m.admin).map((m) => (
           <Link key={m.to} to={m.to} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm transition hover:shadow-md">
             <Selo icone={m.icon} cor={m.cor} />
             <span className="min-w-0"><span className="block truncate font-bold text-rbs-navy">{m.label}</span><span className="block truncate text-sm text-slate-500">{m.desc}</span></span>

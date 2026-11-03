@@ -25,6 +25,7 @@ import TabelaPrecos from "./pages/Orcamentos/TabelaPrecos";
 import Financeiro from "./pages/Financeiro/Financeiro";
 import Extrato from "./pages/Financeiro/Extrato";
 import ContasFixas from "./pages/Financeiro/ContasFixas";
+import GestaoEquipe from "./pages/Equipe/GestaoEquipe";
 import { MODULOS_EM_BREVE } from "./data/menu";
 
 function Privada({ children }) {
@@ -60,6 +61,7 @@ export default function App() {
         <Route path="/financeiro" element={<Privada><Financeiro /></Privada>} />
         <Route path="/financeiro/extrato" element={<Privada><Extrato /></Privada>} />
         <Route path="/financeiro/contas-fixas" element={<Privada><ContasFixas /></Privada>} />
+        <Route path="/equipe" element={<Privada><GestaoEquipe /></Privada>} />
         <Route path="/configuracoes" element={<Privada><Configuracoes /></Privada>} />
         {MODULOS_EM_BREVE.map((m) => (
           <Route key={m.to} path={m.to} element={<Privada><EmBreve modulo={m} /></Privada>} />

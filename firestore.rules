@@ -10,9 +10,48 @@ service cloud.firestore {
     function ehAdmin() {
       return get(/databases/$(database)/documents/usuarios_autorizados/$(request.auth.uid)).data.papel == "admin";
     }
+    function admin() {
+      return request.auth != null && ehAdmin();
+    }
+    function meuFuncionarioId() {
+      return get(/databases/$(database)/documents/usuarios_autorizados/$(request.auth.uid)).data.get("funcionarioId", "");
+    }
+    function emailDoLogin() {
+      return request.auth.token.email.lower();
+    }
     match /usuarios_autorizados/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if ehAdmin();
+      allow get: if request.auth != null && (request.auth.uid == uid || ehAdmin());
+      allow list: if admin();
+      // Convidado cria o próprio perfil, sempre como técnico.
+      allow create: if admin() || (
+        request.auth != null && request.auth.uid == uid
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/convites/$(emailDoLogin()))
+        && request.resource.data.keys().hasOnly(["papel", "funcionarioId", "nome", "email"])
+        && request.resource.data.papel == "tecnico"
+        && request.resource.data.email == emailDoLogin()
+        && request.resource.data.funcionarioId == get(/databases/$(database)/documents/convites/$(emailDoLogin())).data.funcionarioId
+      );
+      allow update, delete: if admin();
+    }
+    match /convites/{email} {
+      allow get: if request.auth != null && (emailDoLogin() == email || ehAdmin());
+      allow list, write: if admin();
+    }
+    match /funcionarios/{funcionarioId} {
+      allow get: if autorizado() && (ehAdmin() || meuFuncionarioId() == funcionarioId);
+      allow list, write: if admin();
+    }
+    match /servicos_equipe/{servicoId} {
+      allow read: if autorizado() && (ehAdmin() || resource.data.funcionarioId == meuFuncionarioId());
+      allow create, delete: if admin();
+      // Técnico só muda o andamento do próprio serviço.
+      allow update: if admin() || (
+        autorizado()
+        && resource.data.funcionarioId == meuFuncionarioId()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "concluidoEm"])
+        && request.resource.data.status in ["Em andamento", "Concluído"]
+      );
     }
     // Leitura pública apenas de um documento pelo ID (QR Code e relatório
     // público). Listar a coleção inteira exige usuário autorizado.
