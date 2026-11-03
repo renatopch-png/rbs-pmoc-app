@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { db } from "../../services/firebase";
 import {
   collection, addDoc, getDocs, deleteDoc, doc,
-  updateDoc, orderBy, query, serverTimestamp,
+  updateDoc, orderBy, query, serverTimestamp, where,
 } from "firebase/firestore";
 
 export default function ListaClientes() {
@@ -58,7 +58,16 @@ export default function ListaClientes() {
   }
 
   async function excluir(id) {
-    if (!confirm("Excluir este cliente?")) return;
+    // Evita deixar equipamentos e contratos "órfãos" (sem cliente).
+    const [eqs, contratos] = await Promise.all([
+      getDocs(query(collection(db, "equipamentos"), where("clienteId", "==", id))),
+      getDocs(query(collection(db, "preventivos"), where("clienteId", "==", id))).catch(() => ({ size: 0 })),
+    ]);
+    const vinculos = [eqs.size && `${eqs.size} equipamento(s)`, contratos.size && `${contratos.size} contrato(s)`].filter(Boolean);
+    const aviso = vinculos.length
+      ? `Este cliente tem ${vinculos.join(" e ")} vinculados. Eles ficarão sem cliente.\n\nExcluir mesmo assim?`
+      : "Excluir este cliente?";
+    if (!confirm(aviso)) return;
     await deleteDoc(doc(db, "clientes", id));
     carregar();
   }

@@ -11,6 +11,7 @@ import {
   PERIODOS, RESULTADO_ROTULO, dadosSemana, dataDoLancamento, filtrar, idPagamentoFixa, inicioSemana, intervalo, mesReferencia, resumir,
 } from "../../lib/financeiro";
 import LancamentoForm from "./LancamentoForm";
+import AReceberPMOC from "../../components/AReceberPMOC";
 import { useFinanceiro, useOcultarValores } from "./useFinanceiro";
 
 const COR_RECEBIDO = "#15803d";
@@ -124,6 +125,8 @@ export default function Financeiro() {
         <Atalho to="/financeiro/contas-fixas" icone={CalendarDays} rotulo="Contas Fixas" cor="from-violet-500 to-indigo-700" />
         <Atalho to="/financeiro/extrato" icone={FileText} rotulo="Extratos" cor="from-blue-500 to-blue-700" />
       </div>
+
+      <AReceberPMOC ocultar={ocultar} />
 
       <div className="grid grid-cols-2 gap-2 rounded-2xl bg-white p-2 shadow-sm sm:grid-cols-4">
         {PERIODOS.map(([id, rotulo]) => (

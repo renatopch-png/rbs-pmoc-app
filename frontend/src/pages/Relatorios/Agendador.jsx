@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../services/firebase";
+import { lerColecao, proximaManutencaoEquipamento } from "../../lib/modulos";
 
 export default function Agendador() {
   const [agendamentos, setAgendamentos] = useState([]);
@@ -8,14 +9,6 @@ export default function Agendador() {
   const [erro, setErro] = useState("");
   const [proximasManutencoes, setProximasManutencoes] = useState([]);
   const [filtroCliente, setFiltroCliente] = useState("");
-
-  const PERIODICIDADES = {
-    Mensal: 30,
-    Bimestral: 60,
-    Trimestral: 90,
-    Semestral: 180,
-    Anual: 365,
-  };
 
   useEffect(() => {
     (async () => {
@@ -32,57 +25,32 @@ export default function Agendador() {
         const snapOS = await getDocs(collection(db, "ordens_servico"));
         const ordens = snapOS.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-        // Calcula próximas manutenções
-        const proximas = [];
+        // Contratos (Cadastro Preventivo): a data do contrato vale para os equipamentos dele.
+        const preventivos = await lerColecao("preventivos");
 
-        equipamentos.forEach((eq) => {
-          // Encontra a última OS deste equipamento
-          const ultimaOS = ordens
-            .filter((os) => os.equipamentoId === eq.id)
-            .sort((a, b) => {
-              const da = a.dataExecucao?.toDate?.() || new Date(0);
-              const db = b.dataExecucao?.toDate?.() || new Date(0);
-              return db - da;
-            })[0];
-
-          if (ultimaOS) {
-            const dataUltimaOS = ultimaOS.dataExecucao?.toDate?.() || new Date(ultimaOS.dataExecucao);
-            const periodicidade = eq.periodicidade || "Mensal";
-            const diasPeriodo = PERIODICIDADES[periodicidade] || 30;
-            const proximaData = new Date(dataUltimaOS);
-            proximaData.setDate(proximaData.getDate() + diasPeriodo);
-
-            proximas.push({
-              equipamentoId: eq.id,
-              equipamentoNome: eq.nome || eq.tipo || "Equipamento sem nome",
-              clienteId: eq.clienteId,
-              clienteNome: clientes.get(eq.clienteId)?.nome || eq.clienteNome || "Sem cliente",
-              clienteTelefone: clientes.get(eq.clienteId)?.telefone || "",
-              local: eq.local || "",
-              tipo: eq.tipo || "",
-              periodicidade: periodicidade,
-              ultimaManutencao: dataUltimaOS,
-              proximaManutencao: proximaData,
-              diasRestantes: Math.ceil((proximaData - new Date()) / (1000 * 60 * 60 * 24)),
-              atrasada: proximaData < new Date(),
-            });
-          } else {
-            // Equipamento nunca teve manutenção
-            proximas.push({
-              equipamentoId: eq.id,
-              equipamentoNome: eq.nome || eq.tipo || "Equipamento sem nome",
-              clienteId: eq.clienteId,
-              clienteNome: clientes.get(eq.clienteId)?.nome || eq.clienteNome || "Sem cliente",
-              clienteTelefone: clientes.get(eq.clienteId)?.telefone || "",
-              local: eq.local || "",
-              tipo: eq.tipo || "",
-              periodicidade: eq.periodicidade || "Mensal",
-              ultimaManutencao: null,
-              proximaManutencao: new Date(),
-              diasRestantes: 0,
-              atrasada: true,
-            });
-          }
+        // Calcula próximas manutenções (mesma regra do painel e das etiquetas).
+        const hojeZero = new Date();
+        hojeZero.setHours(0, 0, 0, 0);
+        const proximas = equipamentos.map((eq) => {
+          const cli = clientes.get(eq.clienteId);
+          const r = proximaManutencaoEquipamento(eq, ordens, preventivos);
+          const proximaData = r.proxima || hojeZero; // nunca teve manutenção: entra como atrasada
+          const diasRestantes = r.proxima ? r.dias : 0;
+          return {
+            equipamentoId: eq.id,
+            equipamentoNome: eq.nome || eq.tipo || "Equipamento sem nome",
+            clienteId: eq.clienteId,
+            clienteNome: cli?.nome || "Sem cliente",
+            clienteTelefone: cli?.telefone || "",
+            local: eq.local || "",
+            tipo: eq.tipo || "",
+            periodicidade: r.periodicidade,
+            contrato: r.contrato ? r.contrato.servico || "Contrato" : "",
+            ultimaManutencao: r.ultima,
+            proximaManutencao: proximaData,
+            diasRestantes,
+            atrasada: !r.proxima || diasRestantes < 0,
+          };
         });
 
         // Ordena por próxima manutenção (atrasadas primeiro)
@@ -148,7 +116,7 @@ export default function Agendador() {
     <div className="p-6">
       <h1 className="mb-1 text-2xl font-bold text-gray-900">Agendador de Manutenções</h1>
       <p className="mb-6 text-sm text-gray-600">
-        Próximas manutenções planejadas por periodicidade de cada equipamento.
+        Próximas manutenções: data do contrato (Cadastro Preventivo) ou, sem contrato, periodicidade do equipamento.
       </p>
 
       {erro && (
@@ -211,7 +179,7 @@ export default function Agendador() {
                   <p className="text-xs font-bold uppercase tracking-wide text-blue-700">👤 {agenda.clienteNome}</p>
                   <h3 className="font-semibold text-gray-900">{agenda.equipamentoNome}</h3>
                   <p className="text-sm text-gray-600">
-                    {[agenda.tipo, agenda.local, agenda.periodicidade].filter(Boolean).join(" • ")}
+                    {[agenda.tipo, agenda.local, agenda.periodicidade, agenda.contrato && `Contrato: ${agenda.contrato}`].filter(Boolean).join(" • ")}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
                     Última: {formatarData(agenda.ultimaManutencao)} | Próxima:{" "}

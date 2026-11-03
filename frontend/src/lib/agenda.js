@@ -23,7 +23,9 @@ export function agendaSemanal(equipamentos, ordens, hoje = new Date(), preventiv
     return { data, servicos: [] };
   });
 
+  const emContrato = new Set(preventivos.filter((p) => p.ativo !== false).flatMap((p) => p.equipamentoIds || []));
   equipamentos.forEach((eq) => {
+    if (emContrato.has(eq.id)) return; // já aparece pelo contrato (abaixo)
     const ultima = ordens
       .filter((os) => os.equipamentoId === eq.id)
       .map((os) => paraData(os.dataExecucao))

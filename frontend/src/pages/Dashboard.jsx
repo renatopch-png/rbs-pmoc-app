@@ -12,7 +12,7 @@ import { MENU, CONFIGURACOES } from "../data/menu";
 import { agendaSemanal, paraData } from "../lib/agenda";
 import { brl } from "../lib/orcamentos";
 import LinhaOrcamento from "../components/orcamentos/LinhaOrcamento";
-import { statusCobranca } from "../lib/cobrancas";
+import { garantirCobrancasDoMes, statusCobranca } from "../lib/cobrancas";
 import { diasAte, lerColecao, statusGarantia, statusPreventivo } from "../lib/modulos";
 import { Selo } from "../components/ui";
 
@@ -85,7 +85,13 @@ export default function Dashboard() {
         setSemana(agendaSemanal([], [], new Date(), prev));
       }
       await carregarOrcamentos();
-      if (isAdmin) setCobrancas(await lerColecao("cobrancas"));
+      if (isAdmin) {
+        // Mesma regra do Financeiro: a cobrança do mês dos contratos já existe.
+        const c0 = await lerColecao("cobrancas");
+        const ordensLidas = await lerColecao("ordens_servico");
+        const geradas = await garantirCobrancasDoMes(prev, c0, ordensLidas).catch(() => 0);
+        setCobrancas(geradas ? await lerColecao("cobrancas") : c0);
+      }
       if (usuario?.uid) {
         try {
           const snap = await getDocs(query(collection(db, "anotacoes"), where("criadoPor", "==", usuario.uid)));

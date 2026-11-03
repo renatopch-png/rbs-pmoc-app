@@ -101,6 +101,33 @@ export async function estornarCobranca(c) {
 
 export const excluirCobranca = (c) => deleteDoc(doc(db, "cobrancas", c.id));
 
+// Gera sozinho a cobrança do mês de cada contrato com cobrança mensal ativa
+// (valor fixo mensal do contrato PMOC). Não mexe nas que já existem.
+export async function garantirCobrancasDoMes(preventivos, cobrancas, ordens, mes = mesReferencia()) {
+  const existentes = new Set(cobrancas.map((c) => c.id));
+  let geradas = 0;
+  for (const p of contratosCobraveis(preventivos)) {
+    const id = idCobranca(p.id, mes);
+    if (existentes.has(id)) continue;
+    await setDoc(doc(db, "cobrancas", id), dadosCobranca(p, mes, execucoesDoMes(p, ordens, mes)));
+    geradas += 1;
+  }
+  return geradas;
+}
+
+// Resumo do que há para receber dos contratos PMOC.
+export function resumoAReceber(cobrancas, mes = mesReferencia()) {
+  const soma = (lista) => lista.reduce((t, c) => t + Math.round((Number(c.valor) || 0) * 100), 0) / 100;
+  const abertas = cobrancas.filter((c) => c.status !== "Pago");
+  const vencidas = abertas.filter((c) => statusCobranca(c).vencida);
+  const doMes = cobrancas.filter((c) => c.mesReferencia === mes);
+  return {
+    aReceber: soma(abertas), vencido: soma(vencidas), qtdAbertas: abertas.length, qtdVencidas: vencidas.length,
+    previstoMes: soma(doMes), recebidoMes: soma(doMes.filter((c) => c.status === "Pago")),
+    abertas: abertas.sort((a, b) => (a.vencimento || "").localeCompare(b.vencimento || "")),
+  };
+}
+
 // Identificador da cobrança no Pix (aparece no extrato do recebedor).
 export const txidCobranca = (c) => `PMOC${(c.mesReferencia || "").replace("-", "")}${(c.preventivoId || "").slice(0, 8)}`;
 
