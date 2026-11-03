@@ -3,6 +3,7 @@ import { auth, db } from "../services/firebase";
 import { paraData } from "./agenda";
 import { mesReferencia } from "./financeiro";
 import { brl } from "./orcamentos";
+import { gerarPixCopiaECola } from "./pix";
 
 // Cobrança mensal do contrato PMOC (Cadastro Preventivo com "cobrança mensal").
 // Um documento por contrato e mês: `pmoc_<preventivoId>_<aaaa-mm>`. Ao receber,
@@ -100,9 +101,20 @@ export async function estornarCobranca(c) {
 
 export const excluirCobranca = (c) => deleteDoc(doc(db, "cobrancas", c.id));
 
-export function mensagemCobranca(c) {
+// Identificador da cobrança no Pix (aparece no extrato do recebedor).
+export const txidCobranca = (c) => `PMOC${(c.mesReferencia || "").replace("-", "")}${(c.preventivoId || "").slice(0, 8)}`;
+
+export function pixDaCobranca(c, pix) {
+  return pix?.chave ? gerarPixCopiaECola({ ...pix, valor: c.valor, txid: txidCobranca(c) }) : "";
+}
+
+export function mensagemCobranca(c, pix) {
   const [a, m, d] = c.vencimento.split("-");
-  return `Olá! Segue a cobrança do contrato de manutenção PMOC referente a ${nomeMes(c.mesReferencia)}:\n`
+  const copiaECola = pixDaCobranca(c, pix);
+  return `Olá! Segue o demonstrativo do contrato de manutenção PMOC referente a ${nomeMes(c.mesReferencia)}:\n`
     + `• Serviço: ${c.servico}\n• Valor: ${brl(c.valor)}\n• Vencimento: ${d}/${m}/${a}\n\n`
-    + "Formas de pagamento: Pix, transferência ou boleto. Qualquer dúvida, estamos à disposição. — RBS Refrigeração e Elétrica";
+    + (pix?.chave
+      ? `Pagamento via Pix\n• Chave (${pix.tipoChave}): ${pix.chave}\n• Favorecido: ${pix.favorecido}${pix.banco ? ` — ${pix.banco}` : ""}\n\nPix copia e cola (já com o valor):\n${copiaECola}\n\n`
+      : "Pagamento via Pix ou transferência.\n\n")
+    + "Após o pagamento, por favor envie o comprovante. — RBS Refrigeração e Elétrica";
 }
