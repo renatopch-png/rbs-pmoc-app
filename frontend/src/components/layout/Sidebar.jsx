@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LogOut, X } from "lucide-react";
+import { LogOut, Snowflake, X } from "lucide-react";
 import { logout } from "../../services/authService";
 import { useAuth } from "../../context/AuthContext";
 import { MENU, CONFIGURACOES, PAINEL } from "../../data/menu";
@@ -30,14 +30,17 @@ export default function Sidebar({ aberto, aoFechar }) {
     <>
       {aberto && <button aria-label="Fechar menu" onClick={aoFechar} className="fixed inset-0 z-30 bg-black/40 md:hidden" />}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-rbs-navy text-white transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-gradient-to-b from-rbs-navy to-[#0d2440] text-white transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 ${
           aberto ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex items-start justify-between px-5 pb-3 pt-5">
-          <div>
-            <h1 className="text-lg font-extrabold leading-tight">RBS <span className="text-sky-300">PMOC</span></h1>
-            <p className="text-[11px] text-blue-100/80">Refrigeração • Energia Solar</p>
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 shadow"><Snowflake size={22} /></span>
+            <div>
+              <h1 className="text-lg font-extrabold leading-tight">RBS <span className="text-sky-300">PMOC</span></h1>
+              <p className="text-[11px] text-blue-100/80">Refrigeração • Energia Solar</p>
+            </div>
           </div>
           <button aria-label="Fechar menu" onClick={aoFechar} className="p-1 md:hidden"><X size={20} /></button>
         </div>

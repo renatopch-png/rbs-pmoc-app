@@ -6,7 +6,7 @@ export default function InstallBanner() {
   if (!instalavel) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-rbs-dark text-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3">
+    <div className="fixed bottom-20 md:bottom-4 left-1/2 -translate-x-1/2 z-50 bg-rbs-dark text-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3">
       <span className="text-sm">Instalar o RBS PMOC na tela inicial?</span>
       <button
         onClick={instalar}
