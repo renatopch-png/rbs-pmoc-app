@@ -556,6 +556,12 @@ export default function ListaEquipamentos() {
                   📱 {qrAberto === eq.id ? "Ocultar QR" : "QR Code"}
                 </button>
                 <button
+                  onClick={() => navigate(`/etiquetas?cliente=${eq.clienteId || ""}&eq=${eq.id}`)}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  🏷️ Etiqueta
+                </button>
+                <button
                   onClick={() => abrirEdicao(eq)}
                   className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
                 >
