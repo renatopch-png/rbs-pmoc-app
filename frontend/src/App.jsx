@@ -35,6 +35,7 @@ import ListaLaudos from "./pages/Laudos/ListaLaudos";
 import FormLaudo from "./pages/Laudos/FormLaudo";
 import PDFLaudo from "./pages/Laudos/PDFLaudo";
 import Anotacoes from "./pages/Anotacoes/Anotacoes";
+import CentralManutencoes from "./pages/Manutencoes/CentralManutencoes";
 import { MODULOS_EM_BREVE } from "./data/menu";
 
 function Privada({ children }) {
@@ -80,6 +81,7 @@ export default function App() {
         <Route path="/laudos/novo" element={<Privada><FormLaudo /></Privada>} />
         <Route path="/laudos/:id" element={<Privada><FormLaudo /></Privada>} />
         <Route path="/laudos/:id/pdf" element={<Privada><PDFLaudo /></Privada>} />
+        <Route path="/manutencoes" element={<Privada><CentralManutencoes /></Privada>} />
         <Route path="/anotacoes" element={<Privada><Anotacoes /></Privada>} />
         <Route path="/configuracoes" element={<Privada><Configuracoes /></Privada>} />
         {MODULOS_EM_BREVE.map((m) => (

@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Plus, History, CalendarDays, Users, Snowflake, Wrench, Wallet, Tag,
   ShieldCheck, CalendarClock, FileText, ClipboardList, ClipboardCheck,
-  UsersRound, Settings,
+  UsersRound, Settings, Gauge,
 } from "lucide-react";
 
 // Módulos com `novo: true` ainda não existem: abrem a página "Em breve".
@@ -9,6 +9,7 @@ export const MENU = [
   { to: "/orcamentos/novo", label: "Novo orçamento", icon: Plus, desc: "Crie orçamento e OS", cor: "from-blue-500 to-blue-700" },
   { to: "/orcamentos", label: "Orçamentos", icon: History, desc: "Ver orçamentos", cor: "from-violet-500 to-indigo-700" },
   { to: "/cronograma", label: "Agenda", icon: CalendarDays, desc: "Próximas manutenções", cor: "from-sky-500 to-blue-700" },
+  { to: "/manutencoes", label: "Manutenções", icon: Gauge, desc: "Central por cliente e equipamento", cor: "from-sky-600 to-indigo-800" },
   { to: "/clientes", label: "Clientes", icon: Users, desc: "Clientes e edifícios", cor: "from-indigo-500 to-blue-700" },
   { to: "/equipamentos", label: "Equipamentos", icon: Snowflake, desc: "Cadastro e QR Code", cor: "from-cyan-500 to-sky-700" },
   { to: "/ordens-servico", label: "Ordens de Serviço", icon: Wrench, desc: "Executar e consultar", cor: "from-orange-400 to-orange-700" },
