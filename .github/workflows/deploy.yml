@@ -45,12 +45,8 @@ jobs:
           firebaseToolsVersion: 15.28.2
 
       # Publica as regras do Firestore (o passo acima publica só o site).
-      # A conta de serviço precisa da função "Firebase Rules Admin" no projeto.
+      # Usa a API Firebase Rules direto; precisa do papel "Firebase Rules Admin".
       - name: Deploy Firestore rules
         env:
           FIREBASE_SA: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-        run: |
-          printf '%s' "$FIREBASE_SA" > "$RUNNER_TEMP/sa.json"
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
-          npx --yes firebase-tools@15.28.2 deploy --only firestore:rules --project rbs-pmoc --non-interactive
-          rm -f "$RUNNER_TEMP/sa.json"
+        run: node scripts/deploy-firestore-rules.mjs rbs-pmoc firestore.rules
