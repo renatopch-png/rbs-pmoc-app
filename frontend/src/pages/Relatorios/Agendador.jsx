@@ -7,6 +7,7 @@ export default function Agendador() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [proximasManutencoes, setProximasManutencoes] = useState([]);
+  const [filtroCliente, setFiltroCliente] = useState("");
 
   const PERIODICIDADES = {
     Mensal: 30,
@@ -22,6 +23,10 @@ export default function Agendador() {
         // Busca todos os equipamentos
         const snapEquip = await getDocs(collection(db, "equipamentos"));
         const equipamentos = snapEquip.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+        // O equipamento guarda só o clienteId: nome e telefone vêm do cadastro de clientes.
+        const snapCli = await getDocs(collection(db, "clientes"));
+        const clientes = new Map(snapCli.docs.map((d) => [d.id, d.data()]));
 
         // Busca todas as ordens de serviço
         const snapOS = await getDocs(collection(db, "ordens_servico"));
@@ -49,9 +54,12 @@ export default function Agendador() {
 
             proximas.push({
               equipamentoId: eq.id,
-              equipamentoNome: eq.nome,
+              equipamentoNome: eq.nome || eq.tipo || "Equipamento sem nome",
               clienteId: eq.clienteId,
-              clienteNome: eq.clienteNome || "—",
+              clienteNome: clientes.get(eq.clienteId)?.nome || eq.clienteNome || "Sem cliente",
+              clienteTelefone: clientes.get(eq.clienteId)?.telefone || "",
+              local: eq.local || "",
+              tipo: eq.tipo || "",
               periodicidade: periodicidade,
               ultimaManutencao: dataUltimaOS,
               proximaManutencao: proximaData,
@@ -62,9 +70,12 @@ export default function Agendador() {
             // Equipamento nunca teve manutenção
             proximas.push({
               equipamentoId: eq.id,
-              equipamentoNome: eq.nome,
+              equipamentoNome: eq.nome || eq.tipo || "Equipamento sem nome",
               clienteId: eq.clienteId,
-              clienteNome: eq.clienteNome || "—",
+              clienteNome: clientes.get(eq.clienteId)?.nome || eq.clienteNome || "Sem cliente",
+              clienteTelefone: clientes.get(eq.clienteId)?.telefone || "",
+              local: eq.local || "",
+              tipo: eq.tipo || "",
               periodicidade: eq.periodicidade || "Mensal",
               ultimaManutencao: null,
               proximaManutencao: new Date(),
@@ -86,6 +97,18 @@ export default function Agendador() {
       }
     })();
   }, []);
+
+  function chamar(agenda) {
+    const destino = (agenda.clienteTelefone || "").replace(/\D/g, "");
+    if (!destino) { alert(`O cliente ${agenda.clienteNome} não tem telefone cadastrado.`); return; }
+    const numero = destino.startsWith("55") ? destino : `55${destino}`;
+    const texto = `Olá! Aqui é da RBS Refrigeração e Elétrica. A manutenção ${agenda.periodicidade.toLowerCase()} do equipamento "${agenda.equipamentoNome}"${agenda.local ? ` (${agenda.local})` : ""} está prevista para ${formatarData(agenda.proximaManutencao)}. Podemos agendar a visita?`;
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, "_blank");
+  }
+
+  const clientesLista = [...new Map(proximasManutencoes.map((a) => [a.clienteId || a.clienteNome, a.clienteNome])).entries()]
+    .sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
+  const visiveis = proximasManutencoes.filter((a) => !filtroCliente || (a.clienteId || a.clienteNome) === filtroCliente);
 
   function formatarData(d) {
     if (!d) return "—";
@@ -164,17 +187,31 @@ export default function Agendador() {
             </div>
           </div>
 
+          {/* Filtro por cliente */}
+          <select
+            aria-label="Filtrar por cliente"
+            value={filtroCliente}
+            onChange={(e) => setFiltroCliente(e.target.value)}
+            className="mt-4 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-semibold"
+          >
+            <option value="">Todos os clientes ({proximasManutencoes.length} equipamentos)</option>
+            {clientesLista.map(([id, nome]) => (
+              <option key={id} value={id}>{nome} ({proximasManutencoes.filter((a) => (a.clienteId || a.clienteNome) === id).length})</option>
+            ))}
+          </select>
+
           {/* Lista de agendamentos */}
-          <div className="mt-6 space-y-2">
-            {proximasManutencoes.map((agenda) => (
+          <div className="mt-3 space-y-2">
+            {visiveis.map((agenda) => (
               <div
                 key={agenda.equipamentoId}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
               >
                 <div className="flex-1">
+                  <p className="text-xs font-bold uppercase tracking-wide text-blue-700">👤 {agenda.clienteNome}</p>
                   <h3 className="font-semibold text-gray-900">{agenda.equipamentoNome}</h3>
                   <p className="text-sm text-gray-600">
-                    {agenda.clienteNome} • {agenda.periodicidade}
+                    {[agenda.tipo, agenda.local, agenda.periodicidade].filter(Boolean).join(" • ")}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
                     Última: {formatarData(agenda.ultimaManutencao)} | Próxima:{" "}
@@ -184,7 +221,7 @@ export default function Agendador() {
                 <div className="flex items-center gap-3">
                   {statusBadge(agenda.diasRestantes, agenda.atrasada)}
                   {agenda.atrasada && (
-                    <button className="rounded-lg bg-red-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-900">
+                    <button onClick={() => chamar(agenda)} title={`Chamar ${agenda.clienteNome} no WhatsApp`} className="rounded-lg bg-red-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-900">
                       📞 Chamar
                     </button>
                   )}
