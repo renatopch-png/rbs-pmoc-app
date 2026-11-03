@@ -7,7 +7,8 @@ import { useAuth } from "../context/AuthContext";
 import { NotificacoesBanner } from "../components/layout/NotificacoesManuencao";
 import { MENU, CONFIGURACOES } from "../data/menu";
 import { agendaSemanal, paraData } from "../lib/agenda";
-import { CORES_STATUS, brl, numeroFmt } from "../lib/orcamentos";
+import { brl } from "../lib/orcamentos";
+import LinhaOrcamento from "../components/orcamentos/LinhaOrcamento";
 
 const DIAS = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"];
 const CHAVE_VALOR = "rbs.ocultarValor";
@@ -31,6 +32,15 @@ export default function Dashboard() {
   const [semana, setSemana] = useState(() => agendaSemanal([], []));
   const [ocultarValor, setOcultarValor] = useState(lerPreferencia);
 
+  async function carregarOrcamentos() {
+    try {
+      const snap = await getDocs(collection(db, "orcamentos"));
+      setOrcamentos(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+      console.warn("Orçamentos indisponíveis:", e.message);
+    }
+  }
+
   useEffect(() => {
     (async () => {
       try {
@@ -45,13 +55,7 @@ export default function Dashboard() {
       } catch (e) {
         console.error("Erro ao carregar a agenda:", e);
       }
-      try {
-        const snap = await getDocs(collection(db, "orcamentos"));
-        setOrcamentos(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      } catch (e) {
-        // Coleção nova: fica vazia até as regras do módulo serem publicadas.
-        console.warn("Orçamentos indisponíveis:", e.message);
-      }
+      await carregarOrcamentos();
     })();
   }, []);
 
@@ -168,20 +172,7 @@ export default function Dashboard() {
         ) : (
           <ul className="space-y-2">
             {recentes.map((o) => (
-              <li key={o.id}>
-                <Link to={`/orcamentos/${o.id}`} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3 hover:bg-slate-50">
-                  <FileText size={20} className="shrink-0 text-blue-600" />
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 font-bold text-rbs-navy">
-                      #{numeroFmt(o.numero)}
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${CORES_STATUS[o.status] || CORES_STATUS.Rascunho}`}>{o.status}</span>
-                    </p>
-                    <p className="truncate text-sm font-semibold text-slate-700">{o.clienteNome}</p>
-                    <p className="text-xs text-slate-500">{o.qtdServicos || 1} item(ns) • {paraData(o.criadoEm)?.toLocaleDateString("pt-BR")}</p>
-                  </div>
-                  <p className="font-extrabold text-green-700">{ocultarValor ? "•••••" : brl(o.valorTotal)}</p>
-                </Link>
-              </li>
+              <LinhaOrcamento key={o.id} o={o} ocultarValor={ocultarValor} aoMudar={carregarOrcamentos} />
             ))}
           </ul>
         )}

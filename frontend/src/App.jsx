@@ -21,6 +21,9 @@ import Configuracoes from "./pages/Configuracoes";
 import ListaOrcamentos from "./pages/Orcamentos/ListaOrcamentos";
 import FormOrcamento from "./pages/Orcamentos/FormOrcamento";
 import PDFOrcamento from "./pages/Orcamentos/PDFOrcamento";
+import ReciboOrcamento from "./pages/Orcamentos/ReciboOrcamento";
+import GarantiaOrcamento from "./pages/Orcamentos/GarantiaOrcamento";
+import Garantias from "./pages/Orcamentos/Garantias";
 import TabelaPrecos from "./pages/Orcamentos/TabelaPrecos";
 import Financeiro from "./pages/Financeiro/Financeiro";
 import Extrato from "./pages/Financeiro/Extrato";
@@ -57,6 +60,9 @@ export default function App() {
         <Route path="/orcamentos/novo" element={<Privada><FormOrcamento /></Privada>} />
         <Route path="/orcamentos/:id" element={<Privada><FormOrcamento /></Privada>} />
         <Route path="/orcamentos/:id/pdf" element={<Privada><PDFOrcamento /></Privada>} />
+        <Route path="/orcamentos/:id/recibo" element={<Privada><ReciboOrcamento /></Privada>} />
+        <Route path="/orcamentos/:id/garantia" element={<Privada><GarantiaOrcamento /></Privada>} />
+        <Route path="/garantias" element={<Privada><Garantias /></Privada>} />
         <Route path="/tabela-precos" element={<Privada><TabelaPrecos /></Privada>} />
         <Route path="/financeiro" element={<Privada><Financeiro /></Privada>} />
         <Route path="/financeiro/extrato" element={<Privada><Extrato /></Privada>} />

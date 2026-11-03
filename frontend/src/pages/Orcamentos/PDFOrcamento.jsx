@@ -2,17 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { ArrowLeft, Download, HandCoins, MessageCircle } from "lucide-react";
-import html2pdf from "html2pdf.js";
 import { db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { DADOS_RBS } from "../../services/ServicoWhatsApp";
 import { paraData } from "../../lib/agenda";
 import { CONDICAO_ETAPAS, brl, numeroFmt, totalItem } from "../../lib/orcamentos";
+import { ENDERECO_RBS as ENDERECO, EMPRESA, LINHA_RBS as LINHA, gerarPdfRbs } from "../../lib/pdfRbs";
 
-const EMPRESA = "RBS REFRIGERAÇÃO E ELÉTRICA";
-const LINHA = "Refrigeração Elétrica • Energia Solar • Engenharia Térmica";
-const ENDERECO = "Rua Capitão Ferreira, nº 86 — Rio de Janeiro/RJ";
-const RODAPE = `RBS Refrigeração e Elétrica | CNPJ ${DADOS_RBS.cnpj}`;
 
 function Secao({ titulo, children }) {
   return (
@@ -115,33 +111,7 @@ export default function PDFOrcamento() {
   async function baixar() {
     setGerando(true);
     try {
-      await html2pdf()
-        .set({
-          margin: [34, 14, 16, 14],
-          filename: nomeArquivo,
-          image: { type: "jpeg", quality: 0.96 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { orientation: "portrait", unit: "mm", format: "a4" },
-          pagebreak: { mode: ["css", "legacy"], avoid: ["tr", ".evitar"] },
-        })
-        .from(corpo.current)
-        .toPdf()
-        .get("pdf")
-        .then((pdf) => {
-          const total = pdf.internal.getNumberOfPages();
-          const largura = pdf.internal.pageSize.getWidth();
-          const altura = pdf.internal.pageSize.getHeight();
-          for (let p = 1; p <= total; p += 1) {
-            pdf.setPage(p);
-            pdf.setFillColor(239, 246, 255).rect(0, 0, largura, 28, "F");
-            pdf.setFillColor(11, 83, 148).rect(0, 28, largura, 0.8, "F");
-            pdf.setFont("helvetica", "bold").setFontSize(14).setTextColor(11, 83, 148).text(EMPRESA, 14, 11);
-            pdf.setFont("helvetica", "normal").setFontSize(9).setTextColor(60, 70, 85).text(LINHA, 14, 17);
-            pdf.text(`CNPJ ${DADOS_RBS.cnpj} • ${ENDERECO}`, 14, 22);
-            pdf.setFontSize(8).setTextColor(100).text(`${RODAPE} | Página ${p} de ${total}`, largura / 2, altura - 7, { align: "center" });
-          }
-        })
-        .save();
+      await gerarPdfRbs(corpo.current, nomeArquivo);
     } finally {
       setGerando(false);
     }

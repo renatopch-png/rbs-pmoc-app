@@ -15,7 +15,7 @@ export const MENU = [
   { to: "/ordens-servico", label: "Ordens de Serviço", icon: Wrench, desc: "Executar e consultar", cor: "from-orange-400 to-orange-700" },
   { to: "/financeiro", admin: true, label: "Financeiro", icon: Wallet, desc: "Receitas e despesas", cor: "from-teal-400 to-cyan-700" },
   { to: "/tabela-precos", label: "Tabela de Preços", icon: Tag, desc: "Gerenciar serviços", cor: "from-teal-500 to-emerald-700" },
-  { to: "/garantias", label: "Garantias", icon: ShieldCheck, novo: true, desc: "Ver garantias ativas", cor: "from-amber-500 to-yellow-700" },
+  { to: "/garantias", label: "Garantias", icon: ShieldCheck, desc: "Ver garantias ativas", cor: "from-amber-500 to-yellow-700" },
   { to: "/preventivo", label: "Cadastro Preventivo", icon: CalendarClock, novo: true, desc: "Manutenções recorrentes", cor: "from-orange-500 to-red-600" },
   { to: "/laudos", label: "Relatórios Técnicos", icon: FileText, novo: true, desc: "Criar relatórios", cor: "from-green-500 to-green-700" },
   { to: "/anotacoes", label: "Anotações", icon: ClipboardList, novo: true, desc: "Lembretes e tarefas", cor: "from-purple-500 to-violet-700" },
