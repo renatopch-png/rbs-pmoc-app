@@ -4,6 +4,7 @@ import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { db, storage } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
+import { sincronizarHistorico } from "../../lib/historicoPublico";
 
 export default function ListaOS() {
   const navigate = useNavigate();
@@ -79,6 +80,10 @@ export default function ListaOS() {
 
       // Apaga o registro da OS no Firestore
       await deleteDoc(doc(db, "ordens_servico", os.id));
+      if (os.equipamentoId) {
+        await sincronizarHistorico(os.equipamentoId).catch((e) =>
+          console.warn("Histórico público não atualizado:", e.message));
+      }
 
       // Remove da tela sem precisar recarregar
       setOrdens((prev) => prev.filter((o) => o.id !== os.id));

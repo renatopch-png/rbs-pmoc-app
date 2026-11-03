@@ -7,14 +7,14 @@ import {
 // Módulos com `novo: true` ainda não existem: abrem a página "Em breve".
 // `to` dos demais aponta para as telas atuais, sem alterar nenhuma delas.
 export const MENU = [
-  { to: "/orcamentos/novo", label: "Novo orçamento", icon: Plus, novo: true, desc: "Crie orçamento e OS", cor: "from-blue-500 to-blue-700" },
-  { to: "/orcamentos", label: "Orçamentos", icon: History, novo: true, desc: "Ver orçamentos", cor: "from-violet-500 to-indigo-700" },
+  { to: "/orcamentos/novo", label: "Novo orçamento", icon: Plus, desc: "Crie orçamento e OS", cor: "from-blue-500 to-blue-700" },
+  { to: "/orcamentos", label: "Orçamentos", icon: History, desc: "Ver orçamentos", cor: "from-violet-500 to-indigo-700" },
   { to: "/cronograma", label: "Agenda", icon: CalendarDays, desc: "Próximas manutenções", cor: "from-sky-500 to-blue-700" },
   { to: "/clientes", label: "Clientes", icon: Users, desc: "Clientes e edifícios", cor: "from-indigo-500 to-blue-700" },
   { to: "/equipamentos", label: "Equipamentos", icon: Snowflake, desc: "Cadastro e QR Code", cor: "from-cyan-500 to-sky-700" },
   { to: "/ordens-servico", label: "Ordens de Serviço", icon: Wrench, desc: "Executar e consultar", cor: "from-orange-400 to-orange-700" },
   { to: "/financeiro", label: "Financeiro", icon: Wallet, novo: true, desc: "Receitas e despesas", cor: "from-teal-400 to-cyan-700" },
-  { to: "/tabela-precos", label: "Tabela de Preços", icon: Tag, novo: true, desc: "Gerenciar serviços", cor: "from-teal-500 to-emerald-700" },
+  { to: "/tabela-precos", label: "Tabela de Preços", icon: Tag, desc: "Gerenciar serviços", cor: "from-teal-500 to-emerald-700" },
   { to: "/garantias", label: "Garantias", icon: ShieldCheck, novo: true, desc: "Ver garantias ativas", cor: "from-amber-500 to-yellow-700" },
   { to: "/preventivo", label: "Cadastro Preventivo", icon: CalendarClock, novo: true, desc: "Manutenções recorrentes", cor: "from-orange-500 to-red-600" },
   { to: "/laudos", label: "Relatórios Técnicos", icon: FileText, novo: true, desc: "Criar relatórios", cor: "from-green-500 to-green-700" },
@@ -25,6 +25,6 @@ export const MENU = [
   { to: "/duvidas", label: "Dúvidas técnicas", icon: CircleHelp, novo: true, desc: "Base técnica", cor: "from-sky-500 to-cyan-700" },
 ];
 
-export const CONFIGURACOES = { to: "/configuracoes", label: "Configurações", icon: Settings, novo: true, desc: "Ajustes do app", cor: "from-slate-500 to-slate-700" };
+export const CONFIGURACOES = { to: "/configuracoes", label: "Configurações", icon: Settings, desc: "Ajustes do app", cor: "from-slate-500 to-slate-700" };
 export const PAINEL = { to: "/", label: "Painel principal", icon: LayoutDashboard };
 export const MODULOS_EM_BREVE = [...MENU, CONFIGURACOES].filter((m) => m.novo);

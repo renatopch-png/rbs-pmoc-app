@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
-import { Calendar, CalendarDays, CircleCheck, DollarSign, Eye, EyeOff, FileText, Snowflake } from "lucide-react";
+import { Calendar, CalendarDays, DollarSign, Eye, EyeOff, FileText, Snowflake } from "lucide-react";
 import { db } from "../services/firebase";
 import { useAuth } from "../context/AuthContext";
 import { NotificacoesBanner } from "../components/layout/NotificacoesManuencao";
 import { MENU, CONFIGURACOES } from "../data/menu";
 import { agendaSemanal, paraData } from "../lib/agenda";
+import { CORES_STATUS, brl, numeroFmt } from "../lib/orcamentos";
 
 const DIAS = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"];
 const CHAVE_VALOR = "rbs.ocultarValor";
-const brl = (v) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const ATALHOS = [...MENU.filter((m) => m.to !== "/orcamentos/novo"), CONFIGURACOES];
 
 function lerPreferencia() {
@@ -67,7 +67,9 @@ export default function Dashboard() {
     const d = paraData(o.criadoEm);
     return d && d.getMonth() === hoje.getMonth() && d.getFullYear() === hoje.getFullYear();
   });
-  const valorMes = doMes.reduce((total, o) => total + (Number(o.valorTotal) || 0), 0);
+  const valorMes = doMes
+    .filter((o) => o.status !== "Reprovado")
+    .reduce((total, o) => total + (Number(o.valorTotal) || 0), 0);
   const recentes = [...orcamentos]
     .sort((a, b) => (paraData(b.criadoEm) || 0) - (paraData(a.criadoEm) || 0))
     .slice(0, 5);
@@ -112,7 +114,6 @@ export default function Dashboard() {
         <Link to="/orcamentos/novo" className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm transition hover:shadow-md">
           <Selo icone={MENU[0].icon} cor={MENU[0].cor} />
           <span><span className="block font-bold text-rbs-navy">Criar Orçamento ou OS</span><span className="text-sm text-slate-500">{MENU[0].desc}</span></span>
-          <span className="ml-auto rounded-full bg-orange-50 px-2 py-0.5 text-[11px] font-bold text-orange-700">Em breve</span>
         </Link>
         {ATALHOS.map((m) => (
           <Link key={m.to} to={m.to} className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm transition hover:shadow-md">
@@ -165,17 +166,19 @@ export default function Dashboard() {
         ) : (
           <ul className="space-y-2">
             {recentes.map((o) => (
-              <li key={o.id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3">
-                <FileText size={20} className="shrink-0 text-blue-600" />
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 font-bold text-rbs-navy">
-                    #{String(o.numero || 0).padStart(3, "0")}
-                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-800"><CircleCheck size={12} />{o.status || "Concluído"}</span>
-                  </p>
-                  <p className="truncate text-sm font-semibold text-slate-700">{o.clienteNome}</p>
-                  <p className="text-xs text-slate-500">{o.qtdServicos || 1} serviço(s) • {paraData(o.criadoEm)?.toLocaleDateString("pt-BR")}</p>
-                </div>
-                <p className="font-extrabold text-green-700">{ocultarValor ? "•••••" : brl(o.valorTotal)}</p>
+              <li key={o.id}>
+                <Link to={`/orcamentos/${o.id}`} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3 hover:bg-slate-50">
+                  <FileText size={20} className="shrink-0 text-blue-600" />
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-2 font-bold text-rbs-navy">
+                      #{numeroFmt(o.numero)}
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${CORES_STATUS[o.status] || CORES_STATUS.Rascunho}`}>{o.status}</span>
+                    </p>
+                    <p className="truncate text-sm font-semibold text-slate-700">{o.clienteNome}</p>
+                    <p className="text-xs text-slate-500">{o.qtdServicos || 1} item(ns) • {paraData(o.criadoEm)?.toLocaleDateString("pt-BR")}</p>
+                  </div>
+                  <p className="font-extrabold text-green-700">{ocultarValor ? "•••••" : brl(o.valorTotal)}</p>
+                </Link>
               </li>
             ))}
           </ul>

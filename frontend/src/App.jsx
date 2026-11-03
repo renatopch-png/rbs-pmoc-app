@@ -17,6 +17,11 @@ import GeradorContrato from "./pages/Relatorios/GeradorContrato";
 import Agendador from "./pages/Relatorios/Agendador";
 import Relatorios from "./pages/Relatorios/Relatorios";
 import EmBreve from "./pages/EmBreve";
+import Configuracoes from "./pages/Configuracoes";
+import ListaOrcamentos from "./pages/Orcamentos/ListaOrcamentos";
+import FormOrcamento from "./pages/Orcamentos/FormOrcamento";
+import PDFOrcamento from "./pages/Orcamentos/PDFOrcamento";
+import TabelaPrecos from "./pages/Orcamentos/TabelaPrecos";
 import { MODULOS_EM_BREVE } from "./data/menu";
 
 function Privada({ children }) {
@@ -44,6 +49,12 @@ export default function App() {
         <Route path="/relatorios/art/:osId" element={<Privada><GeradorART /></Privada>} />
         <Route path="/relatorios/contrato/:clienteId" element={<Privada><GeradorContrato /></Privada>} />
         <Route path="/relatorios" element={<Privada><Relatorios /></Privada>} />
+        <Route path="/orcamentos" element={<Privada><ListaOrcamentos /></Privada>} />
+        <Route path="/orcamentos/novo" element={<Privada><FormOrcamento /></Privada>} />
+        <Route path="/orcamentos/:id" element={<Privada><FormOrcamento /></Privada>} />
+        <Route path="/orcamentos/:id/pdf" element={<Privada><PDFOrcamento /></Privada>} />
+        <Route path="/tabela-precos" element={<Privada><TabelaPrecos /></Privada>} />
+        <Route path="/configuracoes" element={<Privada><Configuracoes /></Privada>} />
         {MODULOS_EM_BREVE.map((m) => (
           <Route key={m.to} path={m.to} element={<Privada><EmBreve modulo={m} /></Privada>} />
         ))}

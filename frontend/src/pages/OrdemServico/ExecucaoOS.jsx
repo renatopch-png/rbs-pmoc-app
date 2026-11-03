@@ -6,6 +6,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getChecklistPorTipo } from "../../data/checklistsEquipamento";
+import { sincronizarHistorico } from "../../lib/historicoPublico";
 
 export default function ExecucaoOS() {
   const { equipamentoId } = useParams();
@@ -192,6 +193,10 @@ export default function ExecucaoOS() {
         tecnicoNome: auth.currentUser?.displayName || "",
         dataExecucao: serverTimestamp(),
       });
+
+      // A OS já foi salva; falha no resumo público não deve impedir o fluxo.
+      await sincronizarHistorico(equipamentoId).catch((e) =>
+        console.warn("Histórico público não atualizado:", e.message));
 
       navigate("/ordens-servico");
     } catch (e) {

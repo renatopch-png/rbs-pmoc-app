@@ -5,6 +5,38 @@ import { db } from "../../services/firebase";
 import { DADOS_RBS } from "../../services/ServicoWhatsApp";
 import QRCode from "qrcode.react";
 
+// Lê o resumo público; a consulta direta às OS só serve enquanto as novas
+// regras do banco não estiverem publicadas ou o resumo não tiver sido gerado.
+async function carregarHistorico(equipamentoId) {
+  try {
+    const resumo = await getDoc(doc(db, "historico_publico", equipamentoId));
+    if (resumo.exists()) return resumo.data().itens || [];
+  } catch (e) {
+    console.warn("Resumo público indisponível:", e.message);
+  }
+  try {
+    const snapOS = await getDocs(
+      query(collection(db, "ordens_servico"), where("equipamentoId", "==", equipamentoId))
+    );
+    return snapOS.docs
+      .map((d) => {
+        const os = d.data();
+        const checklist = os.itensChecklist || [];
+        return {
+          id: d.id,
+          dataExecucao: os.dataExecucao,
+          tecnicoNome: os.tecnicoNome,
+          total: checklist.length,
+          feitos: checklist.filter((it) => it.feito || it.concluido || it.checked).length,
+        };
+      })
+      .sort((a, b) => (b.dataExecucao?.toMillis?.() || 0) - (a.dataExecucao?.toMillis?.() || 0));
+  } catch (e) {
+    console.warn("Histórico indisponível:", e.message);
+    return [];
+  }
+}
+
 export default function PublicoEquipamento() {
   const { equipamentoId } = useParams();
   const [equipamento, setEquipamento] = useState(null);
@@ -33,20 +65,7 @@ export default function PublicoEquipamento() {
           }
         }
 
-        // Histórico de manutenções deste equipamento: sem orderBy no
-        // Firestore (evita precisar de índice composto) — ordenamos por
-        // data mais recente aqui mesmo, no navegador.
-        const snapOS = await getDocs(
-          query(collection(db, "ordens_servico"), where("equipamentoId", "==", equipamentoId))
-        );
-        const lista = snapOS.docs
-          .map((d) => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => {
-            const da = a.dataExecucao?.toMillis ? a.dataExecucao.toMillis() : 0;
-            const db_ = b.dataExecucao?.toMillis ? b.dataExecucao.toMillis() : 0;
-            return db_ - da;
-          });
-        setHistorico(lista);
+        setHistorico(await carregarHistorico(equipamentoId));
       } catch (e) {
         setErro("Erro ao carregar dados. " + e.message);
       } finally {
@@ -192,10 +211,7 @@ export default function PublicoEquipamento() {
           ) : (
             <div className="space-y-3">
               {historico.map((os) => {
-                const total = Array.isArray(os.itensChecklist) ? os.itensChecklist.length : 0;
-                const feitos = Array.isArray(os.itensChecklist)
-                  ? os.itensChecklist.filter((it) => it.feito || it.concluido || it.checked).length
-                  : 0;
+                const { total = 0, feitos = 0 } = os;
                 return (
                   <Link
                     key={os.id}
