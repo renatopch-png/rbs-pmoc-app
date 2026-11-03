@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
-import { ChevronDown, ChevronRight, ChevronUp, Eye, FileText, ReceiptText, RotateCcw, ShieldCheck, Trash2, Wrench } from "lucide-react";
+import { CalendarClock, ChevronDown, ChevronRight, ChevronUp, Eye, FileText, ReceiptText, RotateCcw, ShieldCheck, Trash2, Wrench } from "lucide-react";
 import { db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { paraData } from "../../lib/agenda";
@@ -66,6 +66,7 @@ export default function LinhaOrcamento({ o, ocultarValor = false, aoMudar }) {
           </Link>
           <div className="flex flex-wrap gap-1">
             {fechado && <Acao icone={ReceiptText} rotulo="Recibo" cor="from-emerald-500 to-green-700" onClick={() => navigate(`/orcamentos/${o.id}/recibo`)} />}
+            {fechado && <Acao icone={CalendarClock} rotulo={o.preventivoId ? "Agendado" : "Agendar"} cor="from-orange-500 to-red-600" onClick={() => navigate("/preventivo", { state: o.preventivoId ? { abrirId: o.preventivoId } : { deOrcamento: o } })} />}
             {fechado && <Acao icone={ShieldCheck} rotulo="Garantia" cor="from-amber-500 to-yellow-700" onClick={() => navigate(`/orcamentos/${o.id}/garantia`)} />}
             <Acao icone={Eye} rotulo="Ver/Baixar" cor="from-blue-500 to-blue-700" onClick={() => navigate(`/orcamentos/${o.id}/pdf`)} />
             {o.status !== "Rascunho" && <Acao icone={RotateCcw} rotulo="Reabrir" cor="from-slate-500 to-slate-700" onClick={reabrir} />}

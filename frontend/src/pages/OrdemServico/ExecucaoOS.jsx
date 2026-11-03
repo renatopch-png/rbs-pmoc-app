@@ -7,6 +7,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getChecklistPorTipo } from "../../data/checklistsEquipamento";
 import { sincronizarHistorico } from "../../lib/historicoPublico";
+import { avancarPreventivosDoEquipamento } from "../../lib/modulos";
 
 export default function ExecucaoOS() {
   const { equipamentoId } = useParams();
@@ -197,6 +198,9 @@ export default function ExecucaoOS() {
       // A OS já foi salva; falha no resumo público não deve impedir o fluxo.
       await sincronizarHistorico(equipamentoId).catch((e) =>
         console.warn("Histórico público não atualizado:", e.message));
+      // Agenda recorrente: a execução já atualiza a próxima data do preventivo.
+      await avancarPreventivosDoEquipamento(equipamentoId).catch((e) =>
+        console.warn("Preventivo não atualizado:", e.message));
 
       navigate("/ordens-servico");
     } catch (e) {

@@ -1,4 +1,4 @@
-import { collection, getDocs } from "firebase/firestore";
+import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import { db } from "../services/firebase";
 import { paraData } from "./agenda";
 
@@ -99,4 +99,26 @@ export function linkWhatsApp(telefone, texto) {
   const destino = (telefone || "").replace(/\D/g, "");
   const numero = destino && !destino.startsWith("55") ? `55${destino}` : destino;
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+}
+
+// Ao executar uma OS, avança a próxima visita dos preventivos que incluem o
+// equipamento e estão vencidos ou previstos para os próximos 7 dias.
+// Depois de avançar, a nova data fica fora da janela, então as demais OS do
+// mesmo contrato no mesmo ciclo não empurram a data de novo.
+export async function avancarPreventivosDoEquipamento(equipamentoId, hoje = new Date()) {
+  if (!equipamentoId) return 0;
+  const snap = await getDocs(query(collection(db, "preventivos"), where("equipamentoIds", "array-contains", equipamentoId)));
+  const hojeStr = paraInput(hoje);
+  let n = 0;
+  for (const d of snap.docs) {
+    const p = d.data();
+    const dias = diasAte(p.proximaData);
+    if (p.ativo === false || dias === null || dias > 7) continue;
+    const historico = [...(p.historico || []), { prevista: p.proximaData, realizada: hojeStr, origem: "OS" }].slice(-24);
+    await updateDoc(doc(db, "preventivos", d.id), {
+      proximaData: paraInput(somarPeriodo(p.proximaData, p.periodicidade)), ultimaExecucao: hojeStr, historico,
+    });
+    n += 1;
+  }
+  return n;
 }
