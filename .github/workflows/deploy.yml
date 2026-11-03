@@ -39,3 +39,5 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           channelId: live
           projectId: rbs-pmoc
+          # Versão fixa: as mais novas exigem permissão extra na conta de serviço.
+          firebaseToolsVersion: 15.28.2
