@@ -26,7 +26,7 @@ jobs:
           cd .github/manutencao && npm init -y >/dev/null && npm i firebase-admin firebase firebase-tools@15.28.2 @firebase/rules-unit-testing --no-audit --no-fund --silent
       - name: Testar regras no emulador
         working-directory: .github/manutencao
-        run: env -u GOOGLE_APPLICATION_CREDENTIALS npx firebase emulators:exec --project demo-rbs --only firestore --config emul.json "node emul.mjs"
+        run: cp ../../firestore.rules regras.rules && env -u GOOGLE_APPLICATION_CREDENTIALS npx firebase emulators:exec --project demo-rbs --only firestore --config emul.json "node emul.mjs"
       - name: Publicar regras
         working-directory: .github/manutencao
         run: node run.mjs regras
