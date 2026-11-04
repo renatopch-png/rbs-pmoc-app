@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { CheckCircle2, HandCoins, Undo2, MessageCircle, Pause, Pencil, Play, Plus, Repeat, Trash2, Wrench } from "lucide-react";
+import { CheckCircle2, FileText, HandCoins, ReceiptText, Undo2, MessageCircle, Pause, Pencil, Play, Plus, Repeat, Trash2, Wrench } from "lucide-react";
 import { db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { modulo } from "../../data/menu";
-import { gerarCobranca } from "../../lib/cobrancas";
+import { garantirCobrancasDoMes, gerarCobranca, idCobranca, nomeMes, statusCobranca } from "../../lib/cobrancas";
+import ReceberCobranca from "../../components/ReceberCobranca";
 import { mesReferencia } from "../../lib/financeiro";
 import { brl, numeroFmt } from "../../lib/orcamentos";
 import { PERIODICIDADES, dataBR, lerColecao, linkWhatsApp, paraInput, somarPeriodo, statusPreventivo } from "../../lib/modulos";
@@ -34,6 +35,8 @@ export default function Preventivo() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const [aviso, setAviso] = useState("");
+  const [cobrancas, setCobrancas] = useState([]);
+  const [pagando, setPagando] = useState(null);
   const [lista, setLista] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [equipamentos, setEquipamentos] = useState([]);
@@ -51,6 +54,12 @@ export default function Preventivo() {
       lerColecao("preventivos"), lerColecao("clientes"), lerColecao("equipamentos"),
       isAdmin ? lerColecao("funcionarios") : Promise.resolve([]),
     ]);
+    if (isAdmin) {
+      // Cobrança do mês de cada contrato (gera as que faltam).
+      const [cob0, ordens] = await Promise.all([lerColecao("cobrancas"), lerColecao("ordens_servico")]);
+      const geradas = await garantirCobrancasDoMes(p, cob0, ordens).catch(() => 0);
+      setCobrancas(geradas ? await lerColecao("cobrancas") : cob0);
+    }
     setLista(p);
     setClientes(c.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR")));
     setEquipamentos(e);
@@ -250,9 +259,27 @@ export default function Preventivo() {
                     {p.equipamentoNomes?.length > 0 && <span>• {p.equipamentoNomes.length} equip.</span>}
                   </p>
                   {p.ultimaExecucao && <p className="text-xs text-slate-400">Última: {dataBR(p.ultimaExecucao)}</p>}
-                  {isAdmin && p.cobrancaMensal && Number(p.valor) > 0 && (
-                    <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700"><HandCoins size={12} /> {brl(p.valor)}/mês • vence dia {p.diaVencimento || 10}</p>
-                  )}
+                  {isAdmin && p.cobrancaMensal && Number(p.valor) > 0 && (() => {
+                    const cob = cobrancas.find((x) => x.id === idCobranca(p.id, mesReferencia()));
+                    const st = statusCobranca(cob);
+                    return (
+                      <div className="mt-2 rounded-xl border border-emerald-100 bg-emerald-50/60 p-2">
+                        <p className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-emerald-800">
+                          <HandCoins size={12} /> {brl(p.valor)}/mês • vence dia {p.diaVencimento || 10}
+                          <span className="text-slate-500">• {nomeMes(mesReferencia())}:</span>
+                          <Badge cor={st.cor}>{st.rotulo}</Badge>
+                        </p>
+                        {cob && (
+                          <div className="mt-1.5 flex flex-wrap gap-1">
+                            {cob.status !== "Pago"
+                              ? <button onClick={() => setPagando(cob)} className="rounded-lg bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white">Marcar como pago</button>
+                              : <Link to={`/financeiro/cobrancas/${cob.id}/recibo`} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white"><ReceiptText size={12} /> Recibo</Link>}
+                            <Link to={`/financeiro/cobrancas/${cob.id}`} className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-[11px] font-bold text-blue-700"><FileText size={12} /> Demonstrativo</Link>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap justify-end gap-1 border-t border-slate-100 pt-2">
@@ -265,6 +292,7 @@ export default function Preventivo() {
                     <MessageCircle size={14} /> Confirmar
                   </a>
                 )}
+                <button onClick={() => navigate("/orcamentos/novo", { state: { dePreventivo: p } })} title="Gerar orçamento/proposta deste contrato" className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-50"><FileText size={14} /> Orçamento</button>
                 {p.historico?.length > 0 && <button onClick={() => desfazer(p)} title="Desfazer a última execução" className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-slate-600 hover:bg-slate-100"><Undo2 size={14} /> Desfazer</button>}
                 <button onClick={() => abrir(p)} aria-label="Editar" className="rounded-lg px-2 py-1 text-rbs hover:bg-blue-50"><Pencil size={14} /></button>
                 <button onClick={() => alternarAtivo(p)} aria-label={p.ativo === false ? "Reativar" : "Pausar"} className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100">{p.ativo === false ? <Play size={14} /> : <Pause size={14} />}</button>
@@ -274,6 +302,8 @@ export default function Preventivo() {
           ))}
         </ul>
       )}
+
+      {pagando && <ReceberCobranca cobranca={pagando} aoFechar={() => setPagando(null)} aoConcluir={() => { setPagando(null); carregar(); }} />}
 
       {form && (
         <Painel titulo={editandoId ? "Editar preventivo" : "Novo preventivo"} aoFechar={() => setForm(null)}>

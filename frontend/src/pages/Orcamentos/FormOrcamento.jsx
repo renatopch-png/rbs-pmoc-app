@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
 import { FileDown, Plus, Snowflake, Trash2 } from "lucide-react";
 import { auth, db } from "../../services/firebase";
@@ -26,9 +26,37 @@ function Campo({ rotulo, children }) {
   return <label className="block text-xs font-semibold text-slate-600">{rotulo}<div className="mt-1 font-normal">{children}</div></label>;
 }
 
+// Orçamento/proposta do contrato PMOC, montado a partir do Cadastro Preventivo:
+// um item por equipamento (valor mensal dividido) e condições do contrato.
+function orcamentoDoContrato(p) {
+  const ids = p.equipamentoIds || [];
+  const nomes = p.equipamentoNomes || [];
+  const total = Number(p.valor) || 0;
+  const n = Math.max(ids.length, 1);
+  const parte = Math.floor((total / n) * 100) / 100;
+  const itens = ids.length
+    ? ids.map((eid, i) => ({
+      ...NOVO_ITEM, descricao: `${p.servico} — ${nomes[i] || "equipamento"}`, equipamentoId: eid, equipamentoNome: nomes[i] || "",
+      valorUnit: i === n - 1 ? Math.round((total - parte * (n - 1)) * 100) / 100 : parte,
+    }))
+    : [{ ...NOVO_ITEM, descricao: p.servico, valorUnit: total }];
+  return {
+    ...INICIAL,
+    clienteId: p.clienteId || "",
+    objeto: `Contrato de manutenção preventiva ${String(p.periodicidade || "mensal").toLowerCase()} — PMOC`,
+    escopo: `${p.servico}, com periodicidade ${String(p.periodicidade || "mensal").toLowerCase()}, em ${ids.length || "todos os"} equipamento(s), conforme Plano de Manutenção, Operação e Controle (PMOC) — Lei 13.589/2018 e Portaria MS 3.523/98. Inclui checklist, registro fotográfico e relatório PMOC por visita.`,
+    descricaoDetalhada: nomes.length ? `Equipamentos atendidos:\n${nomes.map((x) => `• ${x}`).join("\n")}` : "",
+    itens,
+    prazoExecucao: `Visitas conforme cronograma do PMOC (periodicidade ${String(p.periodicidade || "mensal").toLowerCase()})`,
+    condicoesPagamento: `Mensal, com vencimento todo dia ${p.diaVencimento || 10}, via Pix ou transferência`,
+    preventivoId: p.id,
+  };
+}
+
 export default function FormOrcamento() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { state } = useLocation();
   const { isAdmin } = useAuth();
   const [form, setForm] = useState(INICIAL);
   const [numero, setNumero] = useState(null);
@@ -54,6 +82,8 @@ export default function FormOrcamento() {
           const dados = snap.data();
           setNumero(dados.numero);
           setForm({ ...INICIAL, ...dados });
+        } else if (state?.dePreventivo) {
+          setForm(orcamentoDoContrato(state.dePreventivo));
         }
       } catch (e) {
         setErro("Não foi possível carregar. Confira se as novas regras do banco foram publicadas.");
