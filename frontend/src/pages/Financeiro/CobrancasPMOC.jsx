@@ -179,10 +179,11 @@ export default function CobrancasPMOC() {
                   {c && c.status !== "Pago" && (
                     <>
                       {c.clienteTelefone && <a href={linkWhatsApp(c.clienteTelefone, mensagemCobranca(c, pix))} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-green-700 hover:bg-green-50"><MessageCircle size={14} /> Enviar cobrança</a>}
-                      <button disabled={!!ocupado} onClick={() => setRecebendo({ cobranca: c, forma: "Pix", data: paraInputData() })} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 hover:bg-emerald-100"><HandCoins size={14} /> Receber</button>
+                      <button disabled={!!ocupado} onClick={() => setRecebendo({ cobranca: c, forma: "Pix", data: paraInputData() })} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 hover:bg-emerald-100"><HandCoins size={14} /> Marcar como pago</button>
                       <button disabled={!!ocupado} aria-label="Excluir cobrança" onClick={() => excluir(c)} className="rounded-lg px-2 py-1 text-red-600 hover:bg-red-50"><Trash2 size={14} /></button>
                     </>
                   )}
+                  {c?.status === "Pago" && <Link to={`/financeiro/cobrancas/${c.id}/recibo`} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 hover:bg-emerald-100"><FileText size={14} /> Recibo</Link>}
                   {c?.status === "Pago" && <button disabled={!!ocupado} onClick={() => estornar(c)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-slate-600 hover:bg-slate-100"><RotateCcw size={14} /> Estornar</button>}
                 </div>
               </li>

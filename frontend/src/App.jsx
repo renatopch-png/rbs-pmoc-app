@@ -29,6 +29,7 @@ import Extrato from "./pages/Financeiro/Extrato";
 import ContasFixas from "./pages/Financeiro/ContasFixas";
 import CobrancasPMOC from "./pages/Financeiro/CobrancasPMOC";
 import DemonstrativoCobranca from "./pages/Financeiro/DemonstrativoCobranca";
+import ReciboCobranca from "./pages/Financeiro/ReciboCobranca";
 import GestaoEquipe from "./pages/Equipe/GestaoEquipe";
 import Garantias from "./pages/Garantias/Garantias";
 import Preventivo from "./pages/Preventivo/Preventivo";
@@ -76,6 +77,7 @@ export default function App() {
         <Route path="/financeiro/extrato" element={<Privada><Extrato /></Privada>} />
         <Route path="/financeiro/cobrancas" element={<Privada><CobrancasPMOC /></Privada>} />
         <Route path="/financeiro/cobrancas/:id" element={<Privada><DemonstrativoCobranca /></Privada>} />
+        <Route path="/financeiro/cobrancas/:id/recibo" element={<Privada><ReciboCobranca /></Privada>} />
         <Route path="/financeiro/contas-fixas" element={<Privada><ContasFixas /></Privada>} />
         <Route path="/equipe" element={<Privada><GestaoEquipe /></Privada>} />
         <Route path="/garantias" element={<Privada><Garantias /></Privada>} />

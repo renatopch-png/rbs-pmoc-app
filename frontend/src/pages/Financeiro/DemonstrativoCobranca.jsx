@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import QRCode from "qrcode.react";
-import { ArrowLeft, Copy, Download, MessageCircle } from "lucide-react";
+import { ArrowLeft, Copy, Download, HandCoins, MessageCircle, ReceiptText } from "lucide-react";
+import ReceberCobranca from "../../components/ReceberCobranca";
 import { db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { DADOS_RBS } from "../../services/ServicoWhatsApp";
@@ -29,6 +30,7 @@ export default function DemonstrativoCobranca() {
   const [erro, setErro] = useState("");
   const [gerando, setGerando] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [pagando, setPagando] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -77,8 +79,16 @@ export default function DemonstrativoCobranca() {
         <Link to="/financeiro/cobrancas" className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"><ArrowLeft size={16} /> Cobranças</Link>
         <button onClick={baixar} disabled={gerando} className="inline-flex items-center gap-1 rounded-xl bg-rbs px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"><Download size={16} /> {gerando ? "Gerando..." : "Baixar PDF"}</button>
         {c.clienteTelefone && <a href={linkWhatsApp(c.clienteTelefone, mensagemCobranca(c, pix))} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white"><MessageCircle size={16} /> WhatsApp</a>}
+        {c.status !== "Pago"
+          ? <button onClick={() => setPagando(true)} className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"><HandCoins size={16} /> Marcar como pago</button>
+          : <Link to={`/financeiro/cobrancas/${c.id}/recibo`} className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"><ReceiptText size={16} /> Emitir recibo</Link>}
         {copiaECola && <button onClick={copiar} className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"><Copy size={16} /> {copiado ? "Copiado!" : "Copiar Pix"}</button>}
       </div>
+      {pagando && <ReceberCobranca cobranca={c} aoFechar={() => setPagando(false)} aoConcluir={async () => {
+        setPagando(false);
+        const s = await getDoc(doc(db, "cobrancas", c.id));
+        setC({ id: s.id, ...s.data() });
+      }} />}
       {!pix.chave && (
         <p className="rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">
           Cadastre a chave Pix em <Link to="/configuracoes" className="underline">Configurações › Dados do Pix</Link> para o QR Code aparecer no demonstrativo.
