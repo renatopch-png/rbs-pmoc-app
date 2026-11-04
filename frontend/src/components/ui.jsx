@@ -68,6 +68,7 @@ export function Filtros({ opcoes, valor, aoMudar }) {
     <div className="flex gap-2 overflow-x-auto pb-1">
       {opcoes.map((o) => (
         <button
+          type="button"
           key={o.valor}
           onClick={() => aoMudar(o.valor)}
           className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${valor === o.valor ? "bg-rbs-navy text-white shadow" : "bg-white text-slate-600 shadow-sm hover:bg-slate-50"}`}
@@ -91,7 +92,7 @@ export function Painel({ titulo, aoFechar, children }) {
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-extrabold text-rbs-navy">{titulo}</h2>
-          <button onClick={aoFechar} className="rounded-full px-2 text-2xl leading-none text-slate-400 hover:text-slate-700" aria-label="Fechar">×</button>
+          <button type="button" onClick={aoFechar} className="rounded-full px-2 text-2xl leading-none text-slate-400 hover:text-slate-700" aria-label="Fechar">×</button>
         </div>
         {children}
       </div>
