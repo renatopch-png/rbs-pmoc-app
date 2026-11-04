@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
-import { FileDown, Plus, Snowflake, Trash2 } from "lucide-react";
+import { BookOpen, FileDown, Plus, Snowflake, Trash2 } from "lucide-react";
+import CatalogoServicos from "../../components/CatalogoServicos";
 import { auth, db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { STATUS, TIPOS_ITEM, brl, calcularTotais, numeroFmt, proximoNumero, totalItem } from "../../lib/orcamentos";
@@ -63,6 +64,7 @@ export default function FormOrcamento() {
   const [clientes, setClientes] = useState([]);
   const [precos, setPrecos] = useState([]);
   const [equipamentos, setEquipamentos] = useState([]);
+  const [catalogoAberto, setCatalogoAberto] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
@@ -212,12 +214,18 @@ export default function FormOrcamento() {
       </Bloco>
 
       <Bloco titulo="Itens">
-        {precos.length > 0 && (
-          <select aria-label="Adicionar da tabela de preços" className={CAMPO} value="" onChange={(e) => usarPreco(e.target.value)}>
-            <option value="">+ Adicionar da Tabela de Preços</option>
-            {precos.map((p) => <option key={p.id} value={p.id}>{p.nome} ({brl(p.preco)})</option>)}
-          </select>
-        )}
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button type="button" onClick={() => setCatalogoAberto(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-700 px-4 py-2 text-sm font-bold text-white shadow-sm">
+            <BookOpen size={16} /> Catálogo de serviços e materiais
+          </button>
+          {precos.length > 0 && (
+            <select aria-label="Adicionar da tabela de preços" className={CAMPO} value="" onChange={(e) => usarPreco(e.target.value)}>
+              <option value="">+ Adicionar da minha Tabela de Preços</option>
+              {precos.map((p) => <option key={p.id} value={p.id}>{p.nome} ({brl(p.preco)})</option>)}
+            </select>
+          )}
+        </div>
+        {catalogoAberto && <CatalogoServicos precos={precos} aoAdicionar={(item) => adicionarItem({ ...NOVO_ITEM, ...item })} aoFechar={() => setCatalogoAberto(false)} />}
         {form.itens.map((item, i) => (
           <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2 rounded-xl border border-slate-200 p-2 sm:grid-cols-[1fr_145px_70px_60px_100px_100px_auto] sm:items-center">
             <input aria-label="Descrição" placeholder="Descrição" className={`${CAMPO} col-span-3 sm:col-span-1`} value={item.descricao} onChange={(e) => mudarItem(i, "descricao", e.target.value)} />

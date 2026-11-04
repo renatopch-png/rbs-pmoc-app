@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc } from "firebase/firestore";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp, updateDoc, writeBatch } from "firebase/firestore";
+import { BookOpen, Pencil, Plus, Trash2 } from "lucide-react";
+import { CATALOGO } from "../../data/catalogoRefrigeracao";
 import { db } from "../../services/firebase";
 import { TIPOS_ITEM, brl } from "../../lib/orcamentos";
 
@@ -46,6 +47,30 @@ export default function TabelaPrecos() {
     }
   }
 
+  // Copia o catálogo padrão (valores médios) para a tabela; não duplica nem
+  // altera itens que já existem com o mesmo nome.
+  async function importarCatalogo() {
+    const existentes = new Set(itens.map((i) => i.nome.trim().toLowerCase()));
+    const novos = CATALOGO.filter((c) => !existentes.has(c.nome.toLowerCase()));
+    if (!novos.length) { setErro(""); window.alert("Todos os itens do catálogo já estão na sua tabela."); return; }
+    if (!window.confirm(`Importar ${novos.length} serviços e materiais com valores médios de referência? Você pode editar os valores depois.`)) return;
+    setSalvando(true);
+    try {
+      for (let i = 0; i < novos.length; i += 400) {
+        const lote = writeBatch(db);
+        novos.slice(i, i + 400).forEach((c) => lote.set(doc(collection(db, "tabela_precos")), {
+          nome: c.nome, tipo: c.tipo, unidade: c.unidade, preco: c.preco, categoria: c.cat, criadoEm: serverTimestamp(),
+        }));
+        await lote.commit();
+      }
+      await carregar();
+    } catch (e) {
+      setErro("Não foi possível importar: " + e.message);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
   async function excluir(item) {
     if (!window.confirm(`Excluir "${item.nome}" da tabela? Orçamentos já criados não mudam.`)) return;
     try {
@@ -58,7 +83,12 @@ export default function TabelaPrecos() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-3">
-      <h1 className="text-2xl font-extrabold text-rbs-navy">Tabela de Preços</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-2xl font-extrabold text-rbs-navy">Tabela de Preços</h1>
+        <button onClick={importarCatalogo} disabled={salvando} className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
+          <BookOpen size={16} /> Importar catálogo de refrigeração
+        </button>
+      </div>
       {erro && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-800">{erro}</p>}
       <form onSubmit={salvar} className="grid gap-2 rounded-2xl bg-white p-4 shadow-sm sm:grid-cols-[1fr_130px_80px_110px_auto]">
         <input aria-label="Serviço ou material" required placeholder="Serviço ou material" className={CAMPO} value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
