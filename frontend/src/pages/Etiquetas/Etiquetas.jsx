@@ -18,34 +18,70 @@ const FORMATOS = {
   "a4": { nome: "Folha A4 — 10 etiquetas (99 × 55 mm)", pagina: "A4", w: 99, h: 55, porPagina: 10 },
 };
 
+// Informações que podem aparecer na etiqueta (escolha salva no aparelho).
+const CAMPOS = [
+  ["empresa", "Nome da empresa", true],
+  ["cliente", "Cliente", true],
+  ["equipamento", "Nome do equipamento", true],
+  ["detalhes", "Tipo, capacidade e local", true],
+  ["marca", "Marca e modelo", false],
+  ["serie", "Nº de série", false],
+  ["gas", "Fluido refrigerante", false],
+  ["periodicidade", "Periodicidade", false],
+  ["manutencao", "Data da manutenção", true],
+  ["proxima", "Próxima manutenção", true],
+  ["tecnico", "Técnico responsável", false],
+  ["telefone", "Telefone da empresa", true],
+  ["qr", "QR Code", true],
+];
+const CAMPOS_PADRAO = Object.fromEntries(CAMPOS.map(([id, , padrao]) => [id, padrao]));
+const CHAVE_CAMPOS = "rbs.etiqueta.campos";
+const lerCampos = () => {
+  try { return { ...CAMPOS_PADRAO, textoLivre: "", ...JSON.parse(localStorage.getItem(CHAVE_CAMPOS) || "{}") }; } catch { return { ...CAMPOS_PADRAO, textoLivre: "" }; }
+};
+
 const nomeEq = (e) => e.nome || e.tipo || "Equipamento";
 const detalheEq = (e) => [e.nome ? e.tipo : "", e.capacidade, e.local].filter(Boolean).join(" • ");
 const linkPublico = (id) => `${window.location.origin}/eq/${id}`;
 
-function Etiqueta({ item, formato }) {
+function Etiqueta({ item, formato, campos: c }) {
   const f = FORMATOS[formato];
   const pequeno = f.h <= 40;
   const qr = pequeno ? 26 : 34;
+  const linha = { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
+  const menor = { ...linha, fontSize: pequeno ? "2.1mm" : "2.4mm", color: "#475569" };
+  const e = item.e;
+  const marca = [e.marca, e.modelo].filter(Boolean).join(" ");
   return (
     <div className="etiqueta" style={{
       width: `${f.w}mm`, height: `${f.h}mm`, boxSizing: "border-box", padding: pequeno ? "2mm" : "3mm",
       display: "flex", gap: "2.5mm", alignItems: "center", border: "0.3mm solid #0B5394", borderRadius: "2mm",
       background: "#fff", color: "#0f172a", fontFamily: "Arial, Helvetica, sans-serif", overflow: "hidden", breakInside: "avoid",
     }}>
-      <div style={{ textAlign: "center", flexShrink: 0 }}>
-        <QRCode value={linkPublico(item.e.id)} renderAs="svg" size={256} level="M" includeMargin={false} style={{ width: `${qr}mm`, height: `${qr}mm`, display: "block" }} />
-        <div style={{ fontSize: "1.9mm", marginTop: "0.8mm", color: "#475569" }}>Escaneie p/ histórico</div>
-      </div>
-      <div style={{ minWidth: 0, flex: 1, lineHeight: 1.2 }}>
-        <div style={{ fontSize: pequeno ? "2.3mm" : "2.6mm", fontWeight: 800, color: "#0B5394", letterSpacing: "0.1mm" }}>RBS REFRIGERAÇÃO E ELÉTRICA</div>
-        <div style={{ fontSize: pequeno ? "2.9mm" : "3.4mm", fontWeight: 800, marginTop: "0.8mm", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.cliente}</div>
-        <div style={{ fontSize: pequeno ? "2.6mm" : "3mm", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nomeEq(item.e)}</div>
-        {!pequeno && detalheEq(item.e) && <div style={{ fontSize: "2.4mm", color: "#475569", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{detalheEq(item.e)}</div>}
-        <div style={{ marginTop: "1.2mm", fontSize: pequeno ? "2.5mm" : "2.9mm" }}>Manutenção: <b>{dataBR(item.manut)}</b></div>
-        <div style={{ marginTop: "0.6mm", fontSize: pequeno ? "2.8mm" : "3.3mm", fontWeight: 800, color: "#b91c1c", border: "0.3mm solid #b91c1c", borderRadius: "1mm", padding: "0.3mm 1mm", display: "inline-block" }}>
-          Próxima: {dataBR(item.prox)}
+      {c.qr && (
+        <div style={{ textAlign: "center", flexShrink: 0 }}>
+          <QRCode value={linkPublico(e.id)} renderAs="svg" size={256} level="M" includeMargin={false} style={{ width: `${qr}mm`, height: `${qr}mm`, display: "block" }} />
+          <div style={{ fontSize: "1.9mm", marginTop: "0.8mm", color: "#475569" }}>Escaneie p/ histórico</div>
         </div>
-        {!pequeno && <div style={{ fontSize: "2.2mm", color: "#475569", marginTop: "0.8mm" }}>{DADOS_RBS.telefoneFmt}</div>}
+      )}
+      <div style={{ minWidth: 0, flex: 1, lineHeight: 1.2 }}>
+        {c.empresa && <div style={{ fontSize: pequeno ? "2.3mm" : "2.6mm", fontWeight: 800, color: "#0B5394", letterSpacing: "0.1mm" }}>RBS REFRIGERAÇÃO E ELÉTRICA</div>}
+        {c.cliente && item.cliente && <div style={{ ...linha, fontSize: pequeno ? "2.9mm" : "3.4mm", fontWeight: 800, marginTop: "0.8mm" }}>{item.cliente}</div>}
+        {c.equipamento && <div style={{ ...linha, fontSize: pequeno ? "2.6mm" : "3mm", fontWeight: 700 }}>{nomeEq(e)}</div>}
+        {c.detalhes && detalheEq(e) && <div style={menor}>{detalheEq(e)}</div>}
+        {c.marca && marca && <div style={menor}>{marca}</div>}
+        {c.serie && e.numeroSerie && <div style={menor}>Série: {e.numeroSerie}</div>}
+        {c.gas && e.tipoGas && <div style={menor}>Fluido: {e.tipoGas}</div>}
+        {c.periodicidade && <div style={menor}>Manutenção {String(item.periodicidade).toLowerCase()}</div>}
+        {c.manutencao && <div style={{ marginTop: "1mm", fontSize: pequeno ? "2.5mm" : "2.9mm" }}>Manutenção: <b>{dataBR(item.manut)}</b></div>}
+        {c.proxima && (
+          <div style={{ marginTop: "0.6mm", fontSize: pequeno ? "2.8mm" : "3.3mm", fontWeight: 800, color: "#b91c1c", border: "0.3mm solid #b91c1c", borderRadius: "1mm", padding: "0.3mm 1mm", display: "inline-block" }}>
+            Próxima: {dataBR(item.prox)}
+          </div>
+        )}
+        {c.tecnico && item.tecnico && <div style={{ ...menor, marginTop: "0.6mm" }}>Técnico: {item.tecnico}</div>}
+        {c.textoLivre && <div style={{ ...linha, fontSize: pequeno ? "2.2mm" : "2.5mm", fontWeight: 700, marginTop: "0.6mm" }}>{c.textoLivre}</div>}
+        {c.telefone && <div style={{ fontSize: "2.2mm", color: "#475569", marginTop: "0.8mm" }}>{DADOS_RBS.telefoneFmt}</div>}
       </div>
     </div>
   );
@@ -58,6 +94,7 @@ export default function Etiquetas() {
   const [selecionados, setSelecionados] = useState(() => new Set((params.get("eq") || "").split(",").filter(Boolean)));
   const [base, setBase] = useState("ultima"); // "ultima" OS ou "hoje"
   const [datas, setDatas] = useState({}); // ajustes manuais por equipamento
+  const [campos, setCampos] = useState(lerCampos);
   const [formato, setFormato] = useState(() => { try { return localStorage.getItem("rbs.etiqueta.formato") || "100x50"; } catch { return "100x50"; } });
 
   useEffect(() => {
@@ -75,7 +112,9 @@ export default function Etiquetas() {
       .filter((e) => !clienteId || e.clienteId === clienteId)
       .sort((a, b) => nomeEq(a).localeCompare(nomeEq(b), "pt-BR"))
       .map((e) => {
-        const ultimaOS = dados.ordens.filter((o) => o.equipamentoId === e.id).map((o) => paraData(o.dataExecucao)).filter(Boolean).sort((a, b) => b - a)[0];
+        const osDoEq = dados.ordens.filter((o) => o.equipamentoId === e.id && paraData(o.dataExecucao)).sort((a, b) => paraData(b.dataExecucao) - paraData(a.dataExecucao));
+        const ultimaOS = osDoEq[0] ? paraData(osDoEq[0].dataExecucao) : undefined;
+        const tecnico = osDoEq[0]?.tecnicoNome || "";
         const contrato = dados.preventivos.find((p) => p.ativo !== false && (p.equipamentoIds || []).includes(e.id));
         const periodicidade = contrato?.periodicidade || e.periodicidade || "Mensal";
         const manutSug = base === "hoje" ? paraInput(new Date()) : (ultimaOS ? paraInput(ultimaOS) : "");
@@ -83,7 +122,7 @@ export default function Etiquetas() {
         if (base === "ultima" && contrato?.proximaData) proxSug = contrato.proximaData;
         else if (manutSug) proxSug = paraInput(somarPeriodo(manutSug, periodicidade));
         const ajuste = datas[e.id] || {};
-        return { e, cliente: nomeCli.get(e.clienteId) || "", periodicidade, manut: ajuste.manut ?? manutSug, prox: ajuste.prox ?? proxSug };
+        return { e, cliente: nomeCli.get(e.clienteId) || "", periodicidade, tecnico, manut: ajuste.manut ?? manutSug, prox: ajuste.prox ?? proxSug };
       });
   }, [dados, clienteId, base, datas]);
 
@@ -96,6 +135,14 @@ export default function Etiquetas() {
   const todosMarcados = itens.length > 0 && itens.every((i) => selecionados.has(i.e.id));
   const marcarTodos = () => setSelecionados(todosMarcados ? new Set() : new Set(itens.map((i) => i.e.id)));
   const ajustar = (id, campo, valor) => setDatas((d) => ({ ...d, [id]: { ...d[id], [campo]: valor } }));
+  function mudarCampo(id, valor) {
+    setCampos((atual) => {
+      const novo = { ...atual, [id]: valor };
+      try { localStorage.setItem(CHAVE_CAMPOS, JSON.stringify(novo)); } catch { /* opcional */ }
+      return novo;
+    });
+  }
+
   function mudarFormato(v) {
     setFormato(v);
     try { localStorage.setItem("rbs.etiqueta.formato", v); } catch { /* opcional */ }
@@ -144,6 +191,21 @@ export default function Etiquetas() {
           </Campo>
         </div>
 
+        <details className="rounded-2xl bg-white p-4 shadow-sm" open>
+          <summary className="cursor-pointer text-sm font-extrabold text-rbs-navy">Informações na etiqueta</summary>
+          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3 lg:grid-cols-4">
+            {CAMPOS.map(([id, rotulo]) => (
+              <label key={id} className="flex items-center gap-2 text-sm text-slate-700">
+                <input type="checkbox" checked={!!campos[id]} onChange={(e) => mudarCampo(id, e.target.checked)} /> {rotulo}
+              </label>
+            ))}
+          </div>
+          <label className="mt-3 block text-xs font-bold text-slate-600">Texto livre (opcional)
+            <input className={`${CAMPO} mt-1`} maxLength={60} placeholder="Ex.: Não desligar o disjuntor sem autorização" value={campos.textoLivre} onChange={(e) => mudarCampo("textoLivre", e.target.value)} />
+          </label>
+          <p className="mt-2 text-xs text-slate-500">Dica: na etiqueta pequena (60 × 40 mm), use poucas informações para não cortar o texto.</p>
+        </details>
+
         {itens.length === 0 ? <Vazio>Nenhum equipamento {clienteId ? "deste cliente" : "cadastrado"}.</Vazio> : (
           <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
             <label className="flex items-center gap-2 border-b border-slate-100 px-4 py-2 text-sm font-bold text-slate-700">
@@ -175,12 +237,12 @@ export default function Etiquetas() {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        {paraImprimir.map((i) => <Etiqueta key={i.e.id} item={i} formato={formato} />)}
+        {paraImprimir.map((i) => <Etiqueta key={i.e.id} item={i} formato={formato} campos={campos} />)}
       </div>
 
       {/* Cópia fora do layout do app: só ela aparece na impressão. */}
       {createPortal(
-        <div id="impressao-etiquetas">{paraImprimir.map((i) => <Etiqueta key={i.e.id} item={i} formato={formato} />)}</div>,
+        <div id="impressao-etiquetas">{paraImprimir.map((i) => <Etiqueta key={i.e.id} item={i} formato={formato} campos={campos} />)}</div>,
         document.body,
       )}
     </div>
