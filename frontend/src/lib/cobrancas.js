@@ -103,12 +103,21 @@ export const excluirCobranca = (c) => deleteDoc(doc(db, "cobrancas", c.id));
 
 // Gera sozinho a cobrança do mês de cada contrato com cobrança mensal ativa
 // (valor fixo mensal do contrato PMOC). Não mexe nas que já existem.
+export function cobrancaOrfaDoCliente(cobrancas, idsContratos, clienteId, mes = mesReferencia()) {
+  if (!clienteId) return null;
+  return cobrancas.find((c) => c.clienteId === clienteId && c.mesReferencia === mes && !idsContratos.has(c.preventivoId)) || null;
+}
+
 export async function garantirCobrancasDoMes(preventivos, cobrancas, ordens, mes = mesReferencia()) {
   const existentes = new Set(cobrancas.map((c) => c.id));
+  const idsContratos = new Set(preventivos.map((p) => p.id));
   let geradas = 0;
   for (const p of contratosCobraveis(preventivos)) {
     const id = idCobranca(p.id, mes);
     if (existentes.has(id)) continue;
+    // Contrato recadastrado: se o cliente já tem a cobrança do mês ligada a um
+    // contrato que não existe mais, não gera outra (evita cobrar duas vezes).
+    if (cobrancaOrfaDoCliente(cobrancas, idsContratos, p.clienteId, mes)) continue;
     await setDoc(doc(db, "cobrancas", id), dadosCobranca(p, mes, execucoesDoMes(p, ordens, mes)));
     geradas += 1;
   }

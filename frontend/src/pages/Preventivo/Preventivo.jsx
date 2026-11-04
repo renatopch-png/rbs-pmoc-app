@@ -5,7 +5,7 @@ import { CheckCircle2, FileText, HandCoins, ReceiptText, Undo2, MessageCircle, P
 import { db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { modulo } from "../../data/menu";
-import { garantirCobrancasDoMes, gerarCobranca, idCobranca, nomeMes, statusCobranca } from "../../lib/cobrancas";
+import { cobrancaOrfaDoCliente, garantirCobrancasDoMes, gerarCobranca, idCobranca, nomeMes, statusCobranca } from "../../lib/cobrancas";
 import ReceberCobranca from "../../components/ReceberCobranca";
 import { mesReferencia } from "../../lib/financeiro";
 import { brl, numeroFmt } from "../../lib/orcamentos";
@@ -180,6 +180,20 @@ export default function Preventivo() {
     }
   }
 
+  // Ativa a cobrança mensal direto no cartão do contrato.
+  async function ativarCobranca(e, p) {
+    e.preventDefault();
+    const valor = Number(e.currentTarget.valor.value);
+    const dia = Number(e.currentTarget.dia.value) || 10;
+    if (!(valor > 0)) return;
+    try {
+      await updateDoc(doc(db, "preventivos", p.id), { cobrancaMensal: true, valor, diaVencimento: dia });
+      await carregar();
+    } catch (e2) {
+      setErro("Não foi possível ativar a cobrança: " + e2.message);
+    }
+  }
+
   // Volta a última marcação de "Realizado" (ou avanço por OS): restaura a data prevista.
   async function desfazer(p) {
     const hist = [...(p.historico || [])];
@@ -259,14 +273,16 @@ export default function Preventivo() {
                     {p.equipamentoNomes?.length > 0 && <span>• {p.equipamentoNomes.length} equip.</span>}
                   </p>
                   {p.ultimaExecucao && <p className="text-xs text-slate-400">Última: {dataBR(p.ultimaExecucao)}</p>}
-                  {isAdmin && p.cobrancaMensal && Number(p.valor) > 0 && (() => {
-                    const cob = cobrancas.find((x) => x.id === idCobranca(p.id, mesReferencia()));
+                  {isAdmin && (p.cobrancaMensal && Number(p.valor) > 0 ? (() => {
+                    const mes = mesReferencia();
+                    const cob = cobrancas.find((x) => x.id === idCobranca(p.id, mes))
+                      || cobrancaOrfaDoCliente(cobrancas, new Set(lista.map((x) => x.id)), p.clienteId, mes);
                     const st = statusCobranca(cob);
                     return (
                       <div className="mt-2 rounded-xl border border-emerald-100 bg-emerald-50/60 p-2">
                         <p className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-emerald-800">
                           <HandCoins size={12} /> {brl(p.valor)}/mês • vence dia {p.diaVencimento || 10}
-                          <span className="text-slate-500">• {nomeMes(mesReferencia())}:</span>
+                          <span className="text-slate-500">• {nomeMes(mes)}:</span>
                           <Badge cor={st.cor}>{st.rotulo}</Badge>
                         </p>
                         {cob && (
@@ -279,7 +295,14 @@ export default function Preventivo() {
                         )}
                       </div>
                     );
-                  })()}
+                  })() : (
+                    <form onSubmit={(e) => ativarCobranca(e, p)} className="mt-2 flex flex-wrap items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 p-2 text-[11px] font-bold text-amber-900">
+                      <HandCoins size={12} /> Cobrança mensal não configurada:
+                      <input name="valor" required type="number" min="1" step="0.01" defaultValue={p.valor || ""} placeholder="R$/mês" className="w-24 rounded-lg border border-amber-300 bg-white px-2 py-1 text-xs font-normal" />
+                      dia <input name="dia" type="number" min="1" max="31" defaultValue={p.diaVencimento || 10} className="w-14 rounded-lg border border-amber-300 bg-white px-2 py-1 text-xs font-normal" />
+                      <button className="rounded-lg bg-amber-600 px-2 py-1 text-white">Ativar cobrança</button>
+                    </form>
+                  ))}
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap justify-end gap-1 border-t border-slate-100 pt-2">
