@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Plus, History, CalendarDays, Users, Snowflake, Wrench, Wallet, Tag,
   ShieldCheck, CalendarClock, FileText, ClipboardList, ClipboardCheck,
-  UsersRound, Settings, Gauge, QrCode,
+  UsersRound, Settings, Gauge, QrCode, GraduationCap,
 } from "lucide-react";
 
 // Módulos com `novo: true` ainda não existem: abrem a página "Em breve".
@@ -21,6 +21,7 @@ export const MENU = [
   { to: "/laudos", label: "Relatórios Técnicos", icon: FileText, desc: "Criar relatórios", cor: "from-green-500 to-green-700" },
   { to: "/anotacoes", label: "Anotações", icon: ClipboardList, desc: "Lembretes e tarefas", cor: "from-purple-500 to-violet-700" },
   { to: "/relatorios", label: "PMOC", icon: ClipboardCheck, desc: "Plano de manutenção", cor: "from-blue-700 to-blue-900" },
+  { to: "/estudos", label: "Meus Estudos", icon: GraduationCap, desc: "Mapas técnicos em PDF", cor: "from-emerald-500 to-teal-700" },
   { to: "/equipe", label: "Equipe", icon: UsersRound, desc: "Equipe e permissões", cor: "from-blue-500 to-indigo-700" },
 ];
 
