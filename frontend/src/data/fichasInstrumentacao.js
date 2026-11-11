@@ -712,4 +712,3 @@ const F = [
 ];
 
 export const FICHAS = F.map((f, i) => ({ ...f, num: i + 1 }));
-export const TOTAL_FICHAS = FICHAS.length;

@@ -4,8 +4,15 @@ import { modulo } from "../../data/menu";
 import { COLECOES } from "../../data/estudos";
 import { PRATICA } from "../../data/estudosPratica";
 import { ExemploResolvido, Quiz, Simulado, Tabela } from "./Pratica";
-import { FICHAS } from "../../data/fichasInstrumentacao";
+import { SERIES, TOTAL_FICHAS } from "../../data/fichas";
 import FichasSecao from "./FichasSecao";
+import SalvarOffline from "./SalvarOffline";
+
+// Todos os PDFs de estudo, para o botão "Salvar offline".
+const TODOS_PDFS = [
+  ...SERIES.flatMap((s) => [s.pdf, ...s.fichas.map((f) => f.pdf)]),
+  ...COLECOES.flatMap((c) => [c.pdf, ...c.topicos.map((t) => t.pdf)]),
+];
 import { BOTAO, BOTAO_SEC, Badge, Busca, Cabecalho, Filtros, Painel, Vazio } from "../../components/ui";
 
 const MOD = modulo("/estudos");
@@ -50,20 +57,23 @@ export default function Estudos() {
     })), [filtro, termo]);
 
   const pratica = aberto ? PRATICA[chave(aberto.c, aberto.t)] : null;
-  const fichasVisiveis = filtro === "todas" || filtro === "fichas"
-    ? FICHAS.filter((f) => !termo || normalizar([f.titulo, f.sub, f.atencao, f.chave, ...f.partes.flat(), ...f.exemplo.flat()].join(" ")).includes(termo))
-    : [];
-  const total = COLECOES.reduce((s, c) => s + c.topicos.length, 0) + FICHAS.length;
+  const series = SERIES
+    .filter((s) => filtro === "todas" || filtro === `fichas-${s.id}`)
+    .map((s) => ({ ...s, visiveis: s.fichas.filter((f) => !termo || normalizar([f.titulo, f.sub, f.atencao, f.chave, ...f.partes.flat(), ...f.exemplo.flat()].join(" ")).includes(termo)) }))
+    .filter((s) => s.visiveis.length > 0);
+  const total = COLECOES.reduce((s, c) => s + c.topicos.length, 0) + TOTAL_FICHAS;
   const opcoes = [
     { valor: "todas", rotulo: "Todas", qtd: total },
-    { valor: "fichas", rotulo: "Fichas visuais", qtd: FICHAS.length },
+    ...SERIES.map((s) => ({ valor: `fichas-${s.id}`, rotulo: `Fichas · ${s.curto}`, qtd: s.fichas.length })),
     ...COLECOES.map((c) => ({ valor: c.id, rotulo: c.titulo, qtd: c.topicos.length })),
   ];
-  const nada = fichasVisiveis.length === 0 && colecoes.every((c) => c.visiveis.length === 0);
+  const nada = series.length === 0 && colecoes.every((c) => c.visiveis.length === 0);
 
   return (
     <div className="space-y-4">
       <Cabecalho modulo={MOD} subtitulo={`${total} materiais: fichas visuais, mapas e prática, organizados por tópico`} />
+
+      <SalvarOffline urls={TODOS_PDFS} />
 
       <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm">
         <Busca valor={busca} aoMudar={setBusca} placeholder="Buscar tópico, fórmula ou termo (ex.: Pt100, degelo, 4–20 mA)" />
@@ -72,7 +82,7 @@ export default function Estudos() {
 
       {nada && <Vazio>Nenhum tópico encontrado para “{busca}”.</Vazio>}
 
-      {fichasVisiveis.length > 0 && <FichasSecao visiveis={fichasVisiveis} />}
+      {series.map((s) => <FichasSecao key={s.id} serie={s} visiveis={s.visiveis} />)}
 
       {colecoes.filter((c) => c.visiveis.length > 0).map((c) => {
         const feitos = c.topicos.filter((t) => concluidos.has(chave(c, t))).length;

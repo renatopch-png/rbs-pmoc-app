@@ -1,11 +1,10 @@
 import { useState } from "react";
 import {
-  Activity, Antenna, ArrowRight, BookOpen, Cable, Calculator, Circle, ClipboardCheck, Cpu, Database, Droplets, Eye, Factory, Flame, Gauge, GraduationCap, Hand, KeyRound, Layers, Magnet, Monitor, MoveVertical, Plug, Radio, Repeat, Ruler, Scale, Server, Settings, Shield, ShieldAlert, Sigma, Siren, SlidersHorizontal, Spline, Target, Thermometer, Timer, ToggleRight, TriangleAlert, Waves, Wind, Wrench, Zap,
+  Activity, Antenna, Fan, ArrowRight, BookOpen, Cable, Calculator, Circle, ClipboardCheck, Cpu, Database, Droplets, Eye, Factory, Flame, Gauge, GraduationCap, Hand, KeyRound, Layers, Magnet, Monitor, MoveVertical, Plug, Radio, Repeat, Ruler, Scale, Server, Settings, Shield, ShieldAlert, Sigma, Siren, SlidersHorizontal, Spline, Target, Thermometer, Timer, ToggleRight, TriangleAlert, Waves, Wind, Wrench, Zap,
 } from "lucide-react";
 
 // Só os ícones usados nas fichas (importar a biblioteca inteira aumenta o app em ~1 MB).
-const Icones = { Activity, Antenna, ArrowRight, BookOpen, Cable, Calculator, Circle, ClipboardCheck, Cpu, Database, Droplets, Eye, Factory, Flame, Gauge, GraduationCap, Hand, KeyRound, Layers, Magnet, Monitor, MoveVertical, Plug, Radio, Repeat, Ruler, Scale, Server, Settings, Shield, ShieldAlert, Sigma, Siren, SlidersHorizontal, Spline, Target, Thermometer, Timer, ToggleRight, TriangleAlert, Waves, Wind, Wrench, Zap };
-import { MODULOS, TOTAL_FICHAS } from "../../data/fichasInstrumentacao";
+const Icones = { Activity, Antenna, Fan, Fan, ArrowRight, BookOpen, Cable, Calculator, Circle, ClipboardCheck, Cpu, Database, Droplets, Eye, Factory, Flame, Gauge, GraduationCap, Hand, KeyRound, Layers, Magnet, Monitor, MoveVertical, Plug, Radio, Repeat, Ruler, Scale, Server, Settings, Shield, ShieldAlert, Sigma, Siren, SlidersHorizontal, Spline, Target, Thermometer, Timer, ToggleRight, TriangleAlert, Waves, Wind, Wrench, Zap };
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -20,9 +19,9 @@ function Icone({ nome, ...p }) {
 
 // Ficha visual no formato pôster: ilustração com peças numeradas, cadeia funcional,
 // exemplo numérico, atenção e ponto-chave. `pagina` fixa o tamanho em A4 (impressão).
-export default function Ficha({ ficha, pagina = false }) {
+export default function Ficha({ ficha, serie, pagina = false }) {
   const [ativo, setAtivo] = useState(0);
-  const modulo = MODULOS[ficha.mod];
+  const modulo = serie.modulos[ficha.mod];
 
   function clicarArte(e) {
     const g = e.target.closest?.("[data-n]");
@@ -42,7 +41,7 @@ export default function Ficha({ ficha, pagina = false }) {
       <header className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-rbs-navy sm:text-[11px]">
-            <Icones.GraduationCap size={14} /> Meu Estudo · Fichas de Instrumentação
+            <Icones.GraduationCap size={14} /> Meu Estudo · Fichas de {serie.curto}
           </p>
           <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-[11px]">Módulo {pad(ficha.mod + 1)} — {modulo}</p>
         </div>
@@ -200,9 +199,9 @@ export default function Ficha({ ficha, pagina = false }) {
       )}
 
       <footer className={`flex items-center justify-between border-t border-slate-200 pt-2 text-[10px] font-bold uppercase tracking-wide text-slate-400 ${pagina ? "mt-auto" : "mt-4"}`}>
-        <span>Meu Estudo · Instrumentação Industrial</span>
+        <span>Meu Estudo · {serie.nome}</span>
         {!pagina && <span className="hidden normal-case sm:inline">Toque nos números para destacar cada peça</span>}
-        <span>Ficha {pad(ficha.num)} / {TOTAL_FICHAS}</span>
+        <span>Ficha {pad(ficha.num)} / {serie.fichas.length}</span>
       </footer>
     </article>
   );
