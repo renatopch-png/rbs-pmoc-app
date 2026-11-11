@@ -6,6 +6,7 @@ import { C, svg, t, pipeH, pipeV, flange, flangeH, tx, gauge, tank, valve, block
 export const MODULOS = [
   "Fundamentos", "Sinais analógicos", "Pressão", "Temperatura", "Vazão",
   "Nível", "Válvulas de controle", "Controle de processo", "Automação e redes", "Calibração e segurança",
+  "Analisadores", "Vazão II", "Nível II", "Atuadores e válvulas", "Instalação de campo", "Redes de campo",
 ];
 
 const F = [
@@ -708,6 +709,441 @@ const F = [
     exemplo: [["SIL 1", "PFDavg 10⁻² a 10⁻¹"], ["SIL 2", "PFDavg 10⁻³ a 10⁻²"], ["Redução de risco SIL 2", "100 a 1 000×"], ["Norma", "IEC 61511"]],
     atencao: "O SIS deve ser independente do controle: não compartilhe o mesmo transmissor.",
     chave: "Cada camada reduz o risco; o SIS é a camada instrumentada.",
+  },
+
+  // ───────────── Módulo 11 · Analisadores ─────────────
+  {
+    id: "ph-industrial", mod: 10, titulo: "Medição de pH industrial", sub: "Eletrodo, referência e transmissor para controlar a acidez do processo.",
+    arte: svg(
+      pipeH(10, 310, 196, 40) + `<rect x="140" y="120" width="40" height="58" rx="4" fill="url(#fvStV)" stroke="${C.steelD}"/>` +
+      `<rect x="150" y="70" width="20" height="132" rx="10" fill="#e8f1fb" stroke="${C.ink}" stroke-width="1.5"/><circle cx="160" cy="200" r="11" fill="#bfe0ff" stroke="${C.ink}" stroke-width="1.5"/>` +
+      `<line x1="160" y1="80" x2="160" y2="192" stroke="${C.blue}" stroke-width="2"/><rect x="164" y="150" width="4" height="10" fill="${C.orange}"/>` +
+      `<path d="M160 70 C160 40 200 30 226 40" fill="none" stroke="${C.ink}" stroke-width="3"/>` +
+      `<rect x="226" y="20" width="76" height="52" rx="6" fill="${C.navy}"/>` + `<rect x="234" y="28" width="60" height="24" rx="3" fill="#0a0e13"/>` + t(264, 45, "7.02 pH", { s: 9.5, c: "#3ddc84" }) + t(264, 66, "4–20 mA", { s: 7.5, c: "#cfd6de" }) +
+      t(60, 230, "processo", { s: 8, c: C.muted, w: 400 }) + arrow(20, 196, 60, 196, C.waterD, 2) +
+      mk(1, 116, 208, 148, 202) + mk(2, 116, 150, 150, 150) + mk(3, 204, 160, 168, 156) + mk(4, 204, 124, 180, 132) + mk(5, 264, 92, 264, 72) + mk(6, 186, 30, 176, 46)
+    ),
+    partes: [
+      ["Membrana de vidro", "Bulbo sensível a íons H⁺: gera tensão proporcional ao pH."],
+      ["Referência", "Eletrólito (KCl) e junção que fecham o circuito com o processo."],
+      ["Sensor de temperatura", "Compensa a inclinação, que muda com a temperatura."],
+      ["Porta-sonda", "Fixo ou retrátil: o retrátil permite tirar o eletrodo sem parar o processo."],
+      ["Transmissor", "Converte mV em pH, gera 4–20 mA e mostra diagnóstico do eletrodo."],
+      ["Cabo de baixo ruído", "O sinal tem altíssima impedância: cabo curto e próprio do fabricante."],
+    ],
+    cadeia: [["Droplets", "Íons H⁺"], ["Zap", "mV"], ["Thermometer", "Compensação"], ["Cpu", "pH"], ["Activity", "4–20 mA"]],
+    exemplo: [["Inclinação teórica (25 °C)", "59,16 mV/pH"], ["Tampão 7 / tampão 4", "−5 mV / +165 mV"], ["Inclinação medida", "≈ 56,7 mV/pH"], ["Eficiência", "≈ 96 % → aceitável"]],
+    atencao: "Não deixe o eletrodo secar: guarde em solução de KCl 3 M, nunca em água destilada.",
+    chave: "Calibre com dois tampões que envolvam a faixa de trabalho do processo.",
+  },
+  {
+    id: "condutividade", mod: 10, titulo: "Medição de condutividade", sub: "Quanto a solução conduz corrente: pureza da água e concentração.",
+    arte: svg(
+      pipeH(10, 150, 170, 44) + pipeH(170, 310, 170, 44) +
+      `<rect x="60" y="100" width="22" height="70" rx="4" fill="url(#fvStV)" stroke="${C.steelD}"/><rect x="62" y="160" width="6" height="22" fill="${C.ink}"/><rect x="74" y="160" width="6" height="22" fill="${C.ink}"/>` +
+      `<path d="M71 100 V60" stroke="${C.ink}" stroke-width="3"/>` + block(36, 26, 70, 34, "2 eletrodos|água pura", C.paper, C.ink, 8) +
+      `<rect x="226" y="100" width="22" height="66" rx="4" fill="url(#fvStV)" stroke="${C.steelD}"/><ellipse cx="237" cy="176" rx="16" ry="10" fill="none" stroke="${C.violet}" stroke-width="5"/>` +
+      `<path d="M237 100 V60" stroke="${C.ink}" stroke-width="3"/>` + block(200, 26, 74, 34, "toroidal|meio sujo", C.paper, C.ink, 8) +
+      `<line x1="160" y1="20" x2="160" y2="220" stroke="${C.steelL}" stroke-width="2"/>` + t(160, 226, "µS/cm · mS/cm", { s: 8, c: C.muted }) +
+      mk(1, 34, 186, 60, 176) + mk(2, 280, 196, 252, 180) + mk(3, 108, 120, 84, 130) + mk(4, 280, 120, 250, 130) + mk(5, 140, 44, 108, 44)
+    ),
+    partes: [
+      ["Célula de contato", "Dois (ou quatro) eletrodos: ideal para baixa condutividade, como água de caldeira."],
+      ["Sensor toroidal", "Indutivo, sem eletrodo exposto: suporta ácidos, soda e sujeira."],
+      ["Constante de célula (K)", "Relaciona a resistência medida à condutividade (em cm⁻¹)."],
+      ["Compensação de temperatura", "Referência a 25 °C; em soluções salinas, ~2 % por °C."],
+      ["Transmissor", "Mostra µS/cm ou mS/cm e pode calcular concentração."],
+    ],
+    cadeia: [["Droplets", "Solução"], ["Zap", "Resistência"], ["Calculator", "× constante K"], ["Thermometer", "Ref. 25 °C"], ["Monitor", "µS/cm"]],
+    exemplo: [["Constante K", "0,1 cm⁻¹"], ["Resistência medida", "2 000 Ω"], ["κ = K / R", "0,1 / 2 000 = 5 × 10⁻⁵ S/cm"], ["Condutividade", "50 µS/cm"]],
+    atencao: "Sem compensação de temperatura, a leitura muda cerca de 2 % por °C mesmo sem mudar o processo.",
+    chave: "Água pura: célula de contato com K baixo. Meio agressivo ou sujo: toroidal.",
+  },
+  {
+    id: "o2-zirconia", mod: 10, titulo: "Analisador de O₂ por zircônia", sub: "Oxigênio nos gases de combustão para ajustar o excesso de ar.",
+    arte: svg(
+      `<rect x="10" y="120" width="300" height="80" fill="#e9ecef" stroke="${C.steelD}"/>` + t(160, 214, "duto de gases de combustão", { s: 8, c: C.muted, w: 400 }) +
+      [40, 120, 200, 270].map((x) => `<path d="M${x} 190 q6 -10 0 -20 q-6 -10 0 -20" fill="none" stroke="${C.orange}" stroke-width="2" opacity=".6"/>`).join("") +
+      `<rect x="150" y="56" width="20" height="120" rx="4" fill="url(#fvStV)" stroke="${C.steelD}"/><rect x="150" y="150" width="20" height="26" rx="3" fill="#f5e3c8" stroke="${C.ink}"/>` +
+      `<rect x="134" y="104" width="52" height="14" fill="url(#fvSt)" stroke="${C.steelD}"/>` +
+      `<rect x="130" y="20" width="60" height="36" rx="6" fill="${C.navy}"/>` + t(160, 42, "3,0 % O₂", { s: 8.5, c: "#3ddc84" }) +
+      `<path d="M190 38 H250" stroke="${C.blue}" stroke-width="1.6" stroke-dasharray="4 3"/>` + block(250, 24, 60, 30, "ar de|referência", C.paper, C.ink, 7.5) +
+      `<circle cx="160" cy="163" r="5" fill="${C.red}"/>` +
+      mk(1, 116, 168, 150, 166) + mk(2, 216, 86, 172, 90) + mk(3, 204, 168, 166, 166) + mk(4, 116, 110, 134, 110) + mk(5, 110, 36, 130, 36) + mk(6, 280, 70, 280, 54)
+    ),
+    partes: [
+      ["Célula de zircônia", "Cerâmica (ZrO₂) aquecida a ~700 °C que conduz íons de oxigênio."],
+      ["Aquecedor", "Mantém a célula na temperatura de trabalho, controlada por termopar."],
+      ["Filtro de difusão", "Protege a célula da fuligem e das cinzas."],
+      ["Flange de montagem", "Fixa a sonda no duto, no ponto representativo do gás."],
+      ["Transmissor", "Calcula o % de O₂ pela equação de Nernst e gera 4–20 mA."],
+      ["Ar de referência", "Ar ambiente (20,9 % O₂) do outro lado da célula."],
+    ],
+    cadeia: [["Flame", "Combustão"], ["Wind", "Gás no duto"], ["Zap", "Tensão de Nernst"], ["Cpu", "% O₂"], ["SlidersHorizontal", "Ajuste do ar"]],
+    exemplo: [["O₂ medido", "3,0 %"], ["Excesso de ar ≈ O₂ / (21 − O₂)", "3 / 18"], ["Excesso de ar", "≈ 17 %"], ["Meta típica (gás natural)", "O₂ entre 2 e 3 %"]],
+    atencao: "Entrada de ar falso no duto antes da sonda faz o O₂ parecer maior do que é.",
+    chave: "O₂ na faixa certa economiza combustível sem gerar CO.",
+  },
+
+  // ───────────── Módulo 12 · Vazão II ─────────────
+  {
+    id: "vortex", mod: 11, titulo: "Medidor vórtex", sub: "Um obstáculo solta vórtices numa frequência proporcional à velocidade.",
+    arte: svg(
+      pipeH(10, 310, 140, 70) + flange(90, 140, 86) + flange(230, 140, 86) +
+      `<path d="M150 108 h20 l-6 64 h-8 Z" fill="${C.ink}"/>` +
+      [0, 1, 2].map((i) => `<path d="M${186 + i * 34} ${i % 2 ? 160 : 120} a10 10 0 1 1 0.1 0" fill="none" stroke="${C.orange}" stroke-width="2"/>`).join("") +
+      [0, 1, 2].map((i) => `<path d="M${203 + i * 34} ${i % 2 ? 120 : 160} a10 10 0 1 0 0.1 0" fill="none" stroke="${C.blue}" stroke-width="2"/>`).join("") +
+      arrow(24, 140, 80, 140, C.waterD, 2.5) + tx(160, 104, 1, "18.0") + `<rect x="156" y="100" width="8" height="10" fill="${C.green}"/>` +
+      mk(1, 130, 196, 158, 168) + mk(2, 240, 196, 220, 168) + mk(3, 196, 90, 166, 104) + mk(4, 206, 50, 176, 62) + mk(5, 60, 196, 90, 182)
+    ),
+    partes: [
+      ["Corpo gerador", "Obstáculo (bluff body) que divide o escoamento."],
+      ["Vórtices de Von Kármán", "Redemoinhos que se soltam alternadamente de cada lado."],
+      ["Sensor", "Piezoelétrico ou capacitivo: conta a frequência dos vórtices."],
+      ["Conversor", "Transforma frequência em vazão (fator K) e gera 4–20 mA ou pulsos."],
+      ["Trechos retos", "Exigem trecho reto a montante para perfil de velocidade estável."],
+    ],
+    cadeia: [["Waves", "Escoamento"], ["Target", "Obstáculo"], ["Activity", "Vórtices"], ["Timer", "Frequência"], ["Monitor", "m³/h"]],
+    exemplo: [["Fator K", "10 pulsos/L"], ["Frequência", "50 Hz"], ["Vazão", "50 / 10 = 5 L/s"], ["Em m³/h", "18 m³/h"]],
+    atencao: "Em baixa velocidade os vórtices ficam instáveis: o medidor tem vazão mínima de corte.",
+    chave: "Sem partes móveis: serve para líquido, gás e vapor.",
+  },
+  {
+    id: "ultrassonico-vazao", mod: 11, titulo: "Vazão por ultrassom (tempo de trânsito)", sub: "O som viaja mais rápido a favor do fluxo do que contra ele.",
+    arte: svg(
+      pipeH(10, 310, 130, 80) + arrow(24, 130, 74, 130, C.waterD, 2.5) +
+      `<rect x="80" y="70" width="40" height="22" rx="4" fill="url(#fvBl)" stroke="${C.navy}"/><rect x="200" y="168" width="40" height="22" rx="4" fill="url(#fvBl)" stroke="${C.navy}"/>` +
+      `<line x1="104" y1="92" x2="216" y2="168" stroke="${C.orange}" stroke-width="2.2" stroke-dasharray="6 3"/>` +
+      arrow(130, 112, 170, 139, C.green, 1.6) + arrow(190, 152, 150, 125, C.red, 1.6) +
+      `<path d="M100 70 V40 H240 M220 190 V214 H270 V60 H240" fill="none" stroke="${C.ink}" stroke-width="1.6"/>` +
+      `<rect x="232" y="22" width="74" height="40" rx="6" fill="${C.navy}"/>` + t(269, 46, "170 m³/h", { s: 8.5, c: "#3ddc84" }) +
+      mk(1, 60, 70, 80, 78) + mk(2, 180, 200, 200, 186) + mk(3, 160, 102, 152, 118) + mk(4, 206, 128, 176, 140) + mk(5, 140, 70, 120, 80) + mk(6, 216, 26, 232, 36)
+    ),
+    partes: [
+      ["Transdutor A", "Emite e recebe pulsos no lado de montante."],
+      ["Transdutor B", "Emite e recebe pulsos no lado de jusante."],
+      ["Trajeto diagonal", "O som cruza o tubo em ângulo com o escoamento."],
+      ["Diferença de tempo", "Δt entre os sentidos é proporcional à velocidade."],
+      ["Acoplamento", "Gel ou almofada entre transdutor e tubo (clamp-on)."],
+      ["Conversor", "Recebe diâmetro, espessura e material do tubo e calcula a vazão."],
+    ],
+    cadeia: [["Radio", "Pulso A → B"], ["Radio", "Pulso B → A"], ["Timer", "Δt"], ["Calculator", "Velocidade × área"], ["Monitor", "m³/h"]],
+    exemplo: [["Tubo DN 200", "A ≈ 0,0314 m²"], ["Velocidade", "1,5 m/s"], ["Q = v · A", "0,0471 m³/s"], ["Vazão", "≈ 170 m³/h"]],
+    atencao: "Bolhas e sólidos atrapalham o tempo de trânsito: em fluido sujo, use o princípio Doppler.",
+    chave: "Clamp-on mede sem cortar o tubo: ideal para auditoria e medição temporária.",
+  },
+  {
+    id: "rotametro", mod: 11, titulo: "Rotâmetro (área variável)", sub: "Indicação local simples, sem energia, para pequenas vazões.",
+    arte: svg(
+      pipeV(160, 200, 236, 14) + pipeV(160, 4, 36, 14) + flangeH(160, 200, 40) + flangeH(160, 36, 40) +
+      `<path d="M146 196 L136 40 H184 L174 196 Z" fill="#e8f1fb" stroke="${C.ink}" stroke-width="1.5"/>` +
+      Array.from({ length: 6 }, (_, i) => `<line x1="186" y1="${180 - i * 26}" x2="198" y2="${180 - i * 26}" stroke="${C.ink}"/>` + t(204, 183 - i * 26, String(i * 100), { s: 7.5, a: "start" })).join("") +
+      `<path d="M150 100 h20 l-6 16 h-8 Z" fill="${C.orange}" stroke="${C.ink}"/>` + `<line x1="140" y1="100" x2="186" y2="100" stroke="${C.red}" stroke-dasharray="3 2"/>` +
+      arrow(160, 236, 160, 210, C.waterD, 2) + t(250, 120, "L/h", { s: 9, c: C.muted }) +
+      `<rect x="74" y="60" width="34" height="18" rx="4" fill="url(#fvSt)" stroke="${C.steelD}"/><path d="M108 69 h28" stroke="${C.ink}" stroke-width="2"/>` +
+      mk(1, 116, 150, 142, 150) + mk(2, 112, 108, 150, 108) + mk(3, 240, 60, 210, 70) + mk(4, 120, 222, 152, 222) + mk(5, 60, 40, 80, 60)
+    ),
+    partes: [
+      ["Tubo cônico", "Mais largo em cima: a área livre cresce com a altura."],
+      ["Flutuador", "Sobe até equilibrar peso e força do escoamento."],
+      ["Escala", "Lida na borda indicada pelo fabricante (topo ou meio do flutuador)."],
+      ["Entrada por baixo", "Montagem sempre vertical, com fluxo de baixo para cima."],
+      ["Válvula de agulha", "Ajuste fino de pequenas vazões (purgas, gases)."],
+    ],
+    cadeia: [["Waves", "Escoamento"], ["MoveVertical", "Flutuador sobe"], ["Ruler", "Área livre"], ["Eye", "Leitura na escala"]],
+    exemplo: [["Escala", "0 a 500 L/h"], ["Leitura", "60 % da escala"], ["Vazão", "300 L/h"], ["Outro fluido", "aplicar fator de correção"]],
+    atencao: "A escala vale para o fluido e a densidade de calibração: outro fluido exige fator de correção.",
+    chave: "Indicação local sem energia, para pequenas vazões e purgas.",
+  },
+
+  // ───────────── Módulo 13 · Nível II ─────────────
+  {
+    id: "nivel-ultrassom", mod: 12, titulo: "Nível ultrassônico", sub: "O eco do som na superfície mede a distância até o produto.",
+    arte: svg(
+      tank(50, 40, 170, 186, 0.45) + `<rect x="118" y="22" width="34" height="22" rx="4" fill="url(#fvBl)" stroke="${C.navy}"/>` +
+      [0, 1, 2, 3].map((i) => `<path d="M${120 - i * 8} ${62 + i * 18} Q135 ${70 + i * 18} ${150 + i * 8} ${62 + i * 18}" fill="none" stroke="${C.orange}" stroke-width="1.8"/>`).join("") +
+      arrow(176, 50, 176, 124, C.orange) + arrow(186, 124, 186, 50, C.green) +
+      `<path d="M236 40 V222 M232 40 h8 M232 222 h8" stroke="${C.ink}"/>` + t(256, 134, "5,0 m", { s: 8 }) +
+      `<rect x="56" y="48" width="158" height="10" fill="${C.red}" opacity=".12"/>` + `<circle cx="135" cy="36" r="2" fill="${C.yellow}"/>` +
+      mk(1, 92, 22, 118, 30) + mk(2, 92, 92, 112, 84) + mk(3, 160, 146, 168, 124) + mk(4, 206, 88, 182, 88) + mk(5, 270, 90, 240, 90) + mk(6, 260, 52, 216, 54)
+    ),
+    partes: [
+      ["Transdutor", "Emite o pulso sonoro e recebe o eco."],
+      ["Pulso sonoro", "Abre em cone a partir do transdutor."],
+      ["Eco", "Reflexão na superfície do líquido."],
+      ["Distância", "d = v × t / 2 (som ≈ 343 m/s a 20 °C)."],
+      ["Altura de referência", "Nível = altura total − distância medida."],
+      ["Zona morta", "Faixa junto ao transdutor sem medição."],
+    ],
+    cadeia: [["Radio", "Emite"], ["Waves", "Reflete"], ["Timer", "Tempo de ida e volta"], ["Thermometer", "Compensa temperatura"], ["Monitor", "Nível"]],
+    exemplo: [["Tempo de ida e volta", "20 ms"], ["Distância", "343 × 0,020 / 2 ≈ 3,43 m"], ["Altura do tanque", "5,0 m"], ["Nível", "≈ 1,57 m"]],
+    atencao: "Espuma, vapor e poeira absorvem o som: nesses casos, prefira radar.",
+    chave: "Barato e sem contato: ótimo para água e efluentes em tanque aberto.",
+  },
+  {
+    id: "nivel-capacitivo", mod: 12, titulo: "Nível capacitivo", sub: "Sonda e parede do tanque formam um capacitor que muda com o nível.",
+    arte: svg(
+      tank(70, 30, 150, 196, 0.5) + `<rect x="139" y="14" width="12" height="196" rx="6" fill="url(#fvStV)" stroke="${C.steelD}"/>` +
+      `<rect x="128" y="2" width="34" height="18" rx="4" fill="url(#fvBl)" stroke="${C.navy}"/>` +
+      [70, 100, 130].map((y) => `<path d="M151 ${y + 70} H212" stroke="${C.violet}" stroke-width="1.2" stroke-dasharray="3 2"/>`).join("") +
+      t(186, 132, "C", { s: 13, c: C.violet }) +
+      block(236, 40, 76, 56, "vazio 50 pF|cheio 250 pF", C.paper, C.ink, 7.5) + `<path d="M162 11 H274 V40" fill="none" stroke="${C.ink}" stroke-width="1.4"/>` +
+      mk(1, 116, 60, 139, 60) + mk(2, 236, 196, 216, 196) + mk(3, 104, 190, 120, 180) + mk(4, 110, 12, 128, 12) + mk(5, 274, 112, 274, 96)
+    ),
+    partes: [
+      ["Sonda", "Haste isolada que funciona como uma das placas."],
+      ["Parede do tanque", "A outra placa (ou um tubo de referência em tanque não metálico)."],
+      ["Produto (dielétrico)", "Quanto mais produto entre as placas, maior a capacitância."],
+      ["Eletrônica", "Mede a capacitância e gera o sinal de nível."],
+      ["Calibração", "Ajuste de vazio (zero) e cheio (span) com o produto real."],
+    ],
+    cadeia: [["Droplets", "Nível sobe"], ["Layers", "Mais dielétrico"], ["Zap", "Capacitância"], ["Cpu", "Eletrônica"], ["Monitor", "% nível"]],
+    exemplo: [["Tanque vazio", "50 pF"], ["Tanque cheio", "250 pF"], ["Medido", "150 pF"], ["Nível", "(150 − 50) / 200 = 50 %"]],
+    atencao: "Produto que gruda na sonda ou muda de constante dielétrica altera a leitura.",
+    chave: "Serve para líquidos e sólidos, mas exige calibração com o produto real.",
+  },
+  {
+    id: "selo-remoto", mod: 12, titulo: "Selo remoto com capilar", sub: "Isola o transmissor de fluidos agressivos, viscosos, quentes ou sanitários.",
+    arte: svg(
+      tank(30, 30, 110, 196, 0.6) + `<rect x="140" y="176" width="14" height="26" fill="url(#fvStV)" stroke="${C.steelD}"/><rect x="140" y="50" width="14" height="26" fill="url(#fvStV)" stroke="${C.steelD}"/>` +
+      `<rect x="150" y="180" width="6" height="18" fill="${C.orange}"/><rect x="150" y="54" width="6" height="18" fill="${C.orange}"/>` +
+      `<path d="M156 189 C220 189 200 140 230 140" fill="none" stroke="${C.ink}" stroke-width="2"/><path d="M156 63 C240 63 200 120 250 128" fill="none" stroke="${C.ink}" stroke-width="2"/>` +
+      `<rect x="222" y="124" width="70" height="30" rx="5" fill="url(#fvBl)" stroke="${C.navy}"/>` + t(257, 143, "DP", { s: 10, c: "#fff" }) +
+      `<path d="M172 63 V189" stroke="${C.muted}" stroke-dasharray="3 2"/>` + t(184, 130, "3 m", { s: 8, a: "start" }) +
+      mk(1, 166, 212, 154, 196) + mk(2, 180, 86, 192, 72) + mk(3, 210, 100, 214, 92) + mk(4, 300, 170, 270, 154) + mk(5, 104, 14, 140, 56)
+    ),
+    partes: [
+      ["Diafragma do selo", "Faceado com o processo: não entope nem acumula produto."],
+      ["Fluido de enchimento", "Silicone, óleo sanitário etc.: transmite a pressão até a célula."],
+      ["Capilar", "Tubo blindado que liga selo e transmissor."],
+      ["Transmissor DP", "Mede a diferença entre os dois selos."],
+      ["Flange de processo", "Fixa o selo no tanque ou na linha."],
+    ],
+    cadeia: [["Droplets", "Processo"], ["Layers", "Diafragma"], ["Cable", "Capilar com fluido"], ["Gauge", "Célula DP"], ["Monitor", "% nível"]],
+    exemplo: [["Distância vertical entre selos", "3 m"], ["Densidade do fluido de enchimento", "930 kg/m³"], ["Coluna do capilar", "930 × 9,81 × 3 ≈ 27,4 kPa"], ["Zero do transmissor", "deslocado de −27,4 kPa"]],
+    atencao: "Capilar ao sol muda de temperatura e gera erro: proteja e mantenha os dois capilares juntos.",
+    chave: "O selo isola o transmissor; o capilar fixa uma coluna que precisa entrar no cálculo do zero.",
+  },
+
+  // ───────────── Módulo 14 · Atuadores e válvulas ─────────────
+  {
+    id: "solenoide", mod: 13, titulo: "Válvula solenoide", sub: "Abre ou fecha a passagem com um comando elétrico.",
+    arte: svg(
+      pipeH(10, 110, 180, 30) + pipeH(210, 310, 180, 30) + `<path d="M110 158 H210 V202 H110 Z" fill="url(#fvSt)" stroke="${C.steelD}"/>` +
+      `<path d="M150 202 V180 H170 V158" fill="none" stroke="${C.ink}" stroke-width="3"/>` +
+      `<rect x="136" y="50" width="48" height="90" rx="6" fill="#c9a227" stroke="${C.ink}"/>` + Array.from({ length: 7 }, (_, i) => `<line x1="136" y1="${60 + i * 11}" x2="184" y2="${60 + i * 11}" stroke="#8a6d10"/>`).join("") +
+      `<rect x="152" y="70" width="16" height="78" rx="3" fill="url(#fvStV)" stroke="${C.steelD}"/>` + `<path d="M154 40 l6 -5 l6 5 l-6 5 z" fill="none"/>` +
+      `<path d="M160 50 l-6 -4 l12 -4 l-12 -4 l12 -4 l-6 -4" fill="none" stroke="${C.ink}" stroke-width="1.5"/>` +
+      `<rect x="192" y="80" width="40" height="30" rx="4" fill="${C.ink}"/>` + t(212, 99, "24 V", { s: 8, c: "#fff" }) + arrow(30, 180, 80, 180, C.waterD, 2.5) +
+      mk(1, 110, 70, 136, 76) + mk(2, 110, 120, 152, 124) + mk(3, 186, 30, 166, 34) + mk(4, 190, 222, 168, 196) + mk(5, 70, 220, 112, 196) + mk(6, 256, 70, 232, 88)
+    ),
+    partes: [
+      ["Bobina", "Energizada, cria o campo que puxa o núcleo."],
+      ["Núcleo móvel", "Êmbolo que abre ou fecha o orifício."],
+      ["Mola", "Devolve o núcleo à posição de repouso (NF ou NA)."],
+      ["Orifício e sede", "Passagem do fluido; vedação na posição fechada."],
+      ["Corpo", "Seta indica o sentido do fluxo."],
+      ["Conector", "Plugue DIN; versões com LED e supressor de surto."],
+    ],
+    cadeia: [["Cpu", "Saída do CLP"], ["Zap", "Bobina"], ["MoveVertical", "Núcleo"], ["Droplets", "Abre/fecha"]],
+    exemplo: [["Bobina", "24 Vcc · 8 W"], ["Corrente", "8 / 24 ≈ 0,33 A"], ["Saída do CLP", "≥ 0,5 A ou relé de interface"], ["Proteção em CC", "diodo de roda livre"]],
+    atencao: "Servo-operada precisa de ΔP mínimo para abrir: sem pressão diferencial, ela não opera.",
+    chave: "Solenoide é liga/desliga: para regular vazão, use válvula de controle.",
+  },
+  {
+    id: "atuador-rotativo", mod: 13, titulo: "Atuador rotativo e chaves fim de curso", sub: "Válvulas de 90° automatizadas com confirmação de posição.",
+    arte: svg(
+      pipeH(10, 120, 190, 30) + pipeH(200, 310, 190, 30) + `<circle cx="160" cy="190" r="34" fill="url(#fvSt)" stroke="${C.steelD}" stroke-width="2"/><rect x="156" y="160" width="8" height="60" rx="3" fill="${C.ink}" transform="rotate(35 160 190)"/>` +
+      `<rect x="154" y="140" width="12" height="16" fill="url(#fvStV)" stroke="${C.steelD}"/>` +
+      `<rect x="100" y="96" width="120" height="44" rx="8" fill="url(#fvBl)" stroke="${C.navy}"/>` + t(160, 122, "pinhão-cremalheira", { s: 7.5, c: "#fff" }) +
+      `<rect x="134" y="60" width="52" height="36" rx="5" fill="${C.yellow}" stroke="${C.ink}"/>` + t(160, 82, "ZSO/ZSC", { s: 7.5 }) +
+      `<path d="M150 56 L160 40 L170 56 Z" fill="${C.red}"/>` + `<rect x="226" y="104" width="40" height="28" rx="4" fill="${C.ink}"/>` + t(246, 122, "SOV", { s: 8, c: "#fff" }) +
+      `<rect x="272" y="104" width="34" height="28" rx="4" fill="url(#fvSt)" stroke="${C.steelD}"/>` + t(289, 146, "ar", { s: 8, c: C.green }) +
+      mk(1, 80, 118, 100, 118) + mk(2, 214, 226, 186, 206) + mk(3, 110, 66, 134, 74) + mk(4, 246, 84, 246, 104) + mk(5, 196, 36, 170, 46) + mk(6, 289, 84, 289, 104)
+    ),
+    partes: [
+      ["Atuador pinhão-cremalheira", "Dupla ação ou simples ação (retorno por mola)."],
+      ["Válvula de 90°", "Borboleta ou esfera, para bloqueio ou controle simples."],
+      ["Caixa de chaves fim de curso", "ZSO (aberta) e ZSC (fechada) confirmam a posição ao CLP."],
+      ["Solenoide (SOV)", "Montagem NAMUR direto no atuador: 3/2 (mola) ou 5/2 (dupla ação)."],
+      ["Indicador visual", "Mostra no campo se a válvula está aberta ou fechada."],
+      ["Filtro regulador", "Ar limpo, seco e na pressão da placa do atuador."],
+    ],
+    cadeia: [["Cpu", "DO do CLP"], ["Zap", "Solenoide"], ["Wind", "Ar no atuador"], ["Repeat", "Gira 90°"], ["ToggleRight", "ZSO confirma"]],
+    exemplo: [["Comando", "abrir em t = 0"], ["Tempo de curso esperado", "≈ 3 s"], ["Supervisão no CLP", "alarme se ZSO > 5 s"], ["Alarme", "falha de abertura"]],
+    atencao: "Dupla ação fica na última posição sem ar; só o retorno por mola garante posição segura.",
+    chave: "A chave fim de curso prova ao CLP que a válvula realmente se moveu.",
+  },
+  {
+    id: "cavitacao", mod: 13, titulo: "Cavitação e flashing", sub: "Quando a pressão na válvula cai abaixo da pressão de vapor do líquido.",
+    arte: svg(
+      `<path d="M20 110 H300 M20 110 V20" stroke="${C.ink}" stroke-width="1.2"/>` + t(14, 24, "P", { s: 9, a: "end" }) +
+      `<line x1="20" y1="78" x2="300" y2="78" stroke="${C.red}" stroke-dasharray="5 3"/>` + t(296, 72, "Pv", { s: 9, c: C.red, a: "end" }) +
+      `<path d="M20 30 H110 C140 30 140 96 160 96 C190 96 200 50 300 52" fill="none" stroke="${C.blue}" stroke-width="2.6"/>` + t(250, 46, "cavitação", { s: 8, c: C.blue }) +
+      `<path d="M20 30 H110 C140 30 140 100 160 100 C190 100 200 90 300 92" fill="none" stroke="${C.orange}" stroke-width="2.6" stroke-dasharray="7 3"/>` + t(250, 104, "flashing", { s: 8, c: C.orange }) +
+      pipeH(10, 120, 180, 26) + pipeH(200, 310, 180, 26) + valve(160, 180, 1.1) +
+      [214, 230, 248, 266].map((x, i) => `<circle cx="${x}" cy="${176 + (i % 2) * 6}" r="${3 + (i % 2)}" fill="#fff" stroke="${C.blue}"/>`).join("") +
+      mk(1, 60, 18, 60, 30) + mk(2, 160, 124, 160, 100) + mk(3, 120, 68, 120, 78) + mk(4, 276, 30, 276, 52) + mk(5, 238, 214, 238, 186) + mk(6, 286, 124, 276, 96)
+    ),
+    partes: [
+      ["Pressão de entrada (P1)", "Pressão antes da válvula."],
+      ["Vena contracta", "Ponto de maior velocidade e menor pressão dentro da válvula."],
+      ["Pressão de vapor (Pv)", "Abaixo dela, o líquido ferve."],
+      ["Recuperação", "Depois da vena, a pressão sobe de novo até P2."],
+      ["Cavitação", "P2 volta acima de Pv: as bolhas implodem e arrancam metal."],
+      ["Flashing", "P2 fica abaixo de Pv: o vapor segue na linha e erode por velocidade."],
+    ],
+    cadeia: [["Gauge", "P1"], ["Waves", "Vena contracta"], ["Thermometer", "Abaixo de Pv?"], ["TriangleAlert", "Bolhas"], ["Wrench", "Dano ao trim"]],
+    exemplo: [["Água a 80 °C", "Pv ≈ 0,47 bar(a)"], ["P2 = 0,4 bar(a)", "flashing"], ["P2 = 2 bar(a), vena < Pv", "cavitação"], ["Solução", "trim anticavitação ou estágios"]],
+    atencao: "Cavitação faz ruído de cascalho na linha, vibra e destrói o trim em pouco tempo.",
+    chave: "Dividir a queda de pressão em estágios evita que a vena contracta caia abaixo de Pv.",
+  },
+
+  // ───────────── Módulo 15 · Instalação de campo ─────────────
+  {
+    id: "diagrama-malha", mod: 14, titulo: "Diagrama de malha", sub: "O caminho do sinal, borne por borne, do campo até o sistema.",
+    arte: svg(
+      tx(40, 200, 0.9, "PT") + block(80, 150, 56, 50, "JB-03|5 · 6", C.paper, C.ink, 8) + block(170, 140, 60, 70, "X1|21 · 22", "#e5e7eb", C.ink, 8) +
+      `<rect x="256" y="120" width="48" height="100" rx="5" fill="${C.blue}"/>` + t(280, 160, "AI", { s: 10, c: "#fff" }) + t(280, 178, "R1 S4", { s: 7, c: "#fff" }) + t(280, 192, "CH2", { s: 7, c: "#fff" }) +
+      `<path d="M52 166 H80 M52 172 H80" stroke="${C.red}" stroke-width="1.8"/><path d="M136 168 H170 M136 178 H170" stroke="${C.ink}" stroke-width="3"/><path d="M230 170 H256 M230 180 H256" stroke="${C.ink}" stroke-width="1.8"/>` +
+      t(153, 196, "MC-03 par 3", { s: 7, c: C.muted }) + t(40, 230, "campo", { s: 8, c: C.muted, w: 400 }) + t(200, 230, "painel", { s: 8, c: C.muted, w: 400 }) +
+      `<line x1="150" y1="40" x2="150" y2="224" stroke="${C.steelL}" stroke-width="2" stroke-dasharray="6 4"/>` +
+      block(20, 26, 110, 40, "PT-101|pressão do vaso", C.navy, "#fff", 8) +
+      mk(1, 40, 112, 40, 150) + mk(2, 108, 128, 108, 150) + mk(3, 153, 124, 153, 168) + mk(4, 200, 118, 200, 140) + mk(5, 280, 100, 280, 120) + mk(6, 260, 40)
+    ),
+    partes: [
+      ["Instrumento de campo", "Tag (ex.: PT-101) e bornes + e −."],
+      ["Caixa de junção (JB)", "Reúne os pares do campo em um cabo multivias."],
+      ["Multicabo", "Identificado por número e par (ex.: MC-03, par 3)."],
+      ["Painel de distribuição", "Bornes de interligação com o sistema (marshalling)."],
+      ["Cartão de E/S", "Rack, slot e canal onde o sinal entra no CLP/SDCD."],
+      ["Identificação", "Anilhas, plaquetas e tag no sistema iguais ao documento."],
+    ],
+    cadeia: [["Gauge", "Campo"], ["Plug", "Caixa de junção"], ["Cable", "Multicabo"], ["Layers", "Painel"], ["Cpu", "Cartão AI"]],
+    exemplo: [["PT-101", "JB-03 bornes 5/6"], ["Cabo", "MC-03, par 3"], ["Painel", "X1:21/22"], ["Sistema", "AI rack 1, slot 4, canal 2"]],
+    atencao: "Diagrama desatualizado custa horas de manutenção: atualize (as built) a cada alteração.",
+    chave: "Com o diagrama de malha você segue o sinal do campo ao sistema sem abrir caixa por caixa.",
+  },
+  {
+    id: "aterramento-blindagem", mod: 14, titulo: "Aterramento e blindagem de sinais", sub: "Torcer, blindar, separar e aterrar em um ponto só.",
+    arte: svg(
+      `<rect x="20" y="40" width="70" height="60" rx="6" fill="${C.paper}" stroke="${C.ink}"/>` + t(55, 74, "campo", { s: 9 }) +
+      `<rect x="230" y="30" width="76" height="80" rx="6" fill="#e5e7eb" stroke="${C.ink}"/>` + t(268, 74, "painel", { s: 9 }) +
+      `<rect x="90" y="60" width="140" height="20" rx="10" fill="#cfd8e3" stroke="${C.steelD}"/>` +
+      wave(94, 226, 66, 3, 10, C.red, 1.6) + wave(99, 226, 74, 3, 10, C.ink, 1.6) +
+      `<path d="M230 90 V150 M220 150 h20 M224 156 h12 M228 162 h4" stroke="${C.green}" stroke-width="2"/>` +
+      `<path d="M90 92 V130" stroke="${C.red}" stroke-width="1.6" stroke-dasharray="3 2"/>` + t(90, 144, "não aterrar", { s: 8, c: C.red }) +
+      `<rect x="20" y="186" width="130" height="16" rx="3" fill="#ffe1d6" stroke="${C.orange}"/>` + t(85, 198, "bandeja de potência", { s: 7.5, c: C.orange }) +
+      `<rect x="170" y="186" width="130" height="16" rx="3" fill="#dbeafe" stroke="${C.blue}"/>` + t(235, 198, "bandeja de sinal", { s: 7.5, c: C.blue }) +
+      mk(1, 160, 40, 160, 64) + mk(2, 160, 106, 160, 80) + mk(3, 262, 150, 236, 150) + mk(4, 60, 130, 88, 120) + mk(5, 160, 222, 160, 202)
+    ),
+    partes: [
+      ["Par trançado", "A torção cancela o ruído induzido por campos magnéticos."],
+      ["Blindagem", "Malha ou fita metálica que desvia o ruído elétrico."],
+      ["Aterramento no painel", "Blindagem ligada à barra de terra de instrumentação em um só ponto."],
+      ["Ponta do campo", "Blindagem isolada (cortada e protegida) no lado do instrumento."],
+      ["Separação de bandejas", "Cabos de sinal longe dos cabos de potência e de inversores."],
+    ],
+    cadeia: [["Cable", "Torcer"], ["Shield", "Blindar"], ["Layers", "Separar"], ["Plug", "Aterrar em 1 ponto"]],
+    exemplo: [["Sintoma", "4–20 mA oscilando ±0,3 mA"], ["Causa", "blindagem aterrada nas duas pontas"], ["Correção", "aterrar só no painel"], ["Resultado", "sinal estável"]],
+    atencao: "Blindagem aterrada nas duas pontas forma laço de terra e injeta ruído no sinal.",
+    chave: "Ruído se resolve na instalação; filtro no software só esconde o problema.",
+  },
+  {
+    id: "barreira-ex-i", mod: 14, titulo: "Barreira de segurança intrínseca", sub: "Limita a energia que chega à área classificada.",
+    arte: svg(
+      `<rect x="10" y="20" width="140" height="210" rx="8" fill="${C.orange}" opacity=".12"/>` + t(80, 38, "área classificada", { s: 8.5, c: C.orange }) +
+      `<rect x="170" y="20" width="140" height="210" rx="8" fill="${C.green}" opacity=".1"/>` + t(240, 38, "área segura", { s: 8.5, c: C.green }) +
+      tx(70, 170, 1.1, "Ex i") + `<path d="M80 150 H196 M80 158 H196" stroke="#2f7de1" stroke-width="3"/>` +
+      `<rect x="196" y="120" width="34" height="70" rx="4" fill="${C.yellow}" stroke="${C.ink}"/>` + t(213, 158, "BAR", { s: 7.5 }) +
+      `<rect x="250" y="110" width="44" height="90" rx="4" fill="${C.blue}"/>` + t(272, 158, "AI", { s: 10, c: "#fff" }) +
+      `<path d="M230 150 H250 M230 160 H250" stroke="${C.ink}" stroke-width="2"/>` +
+      block(176, 60, 128, 40, "Uo 28 V · Io 93 mA|Co 83 nF", C.paper, C.ink, 7.5) +
+      mk(1, 30, 120, 52, 130) + mk(2, 130, 136, 130, 150) + mk(3, 213, 210, 213, 190) + mk(4, 160, 216) + mk(5, 272, 220, 272, 200) + mk(6, 240, 112, 240, 100)
+    ),
+    partes: [
+      ["Instrumento Ex i", "Certificado com seus parâmetros de entrada (Ui, Ii, Ci, Li)."],
+      ["Cabo azul", "Identifica o circuito intrinsecamente seguro."],
+      ["Barreira / isolador", "Limita tensão e corrente (Uo, Io) que vão ao campo."],
+      ["Fronteira", "A barreira fica na área segura, na entrada do painel."],
+      ["Cartão do CLP", "Recebe o sinal já isolado."],
+      ["Parâmetros de entidade", "Uo ≤ Ui, Io ≤ Ii e Ci + C do cabo ≤ Co."],
+    ],
+    cadeia: [["Plug", "Painel"], ["Shield", "Barreira limita"], ["Cable", "Cabo azul"], ["Gauge", "Instrumento Ex i"]],
+    exemplo: [["Barreira", "Uo 28 V · Io 93 mA · Co 83 nF"], ["Instrumento", "Ui 30 V · Ii 100 mA · Ci 5 nF"], ["Cabo 300 m (200 nF/km)", "60 nF"], ["5 + 60 = 65 nF ≤ 83 nF", "aprovado ✓"]],
+    atencao: "Não misture circuitos Ex i com outros no mesmo borne ou multicabo sem a separação exigida.",
+    chave: "Ex i é o tipo de proteção que permite manutenção com o circuito energizado.",
+  },
+
+  // ───────────── Módulo 16 · Redes de campo ─────────────
+  {
+    id: "fieldbus-segmento", mod: 15, titulo: "Segmento Fieldbus / Profibus PA", sub: "Vários instrumentos alimentados e comunicando no mesmo par de fios.",
+    arte: svg(
+      block(10, 30, 70, 44, "fonte /|condicionador", C.navy, "#fff", 8) + `<path d="M80 52 H300" stroke="${C.orange}" stroke-width="5"/>` +
+      `<rect x="292" y="40" width="18" height="24" rx="3" fill="${C.yellow}" stroke="${C.ink}"/><rect x="82" y="40" width="18" height="24" rx="3" fill="${C.yellow}" stroke="${C.ink}"/>` +
+      [130, 190, 250].map((x) => `<rect x="${x - 14}" y="70" width="28" height="18" rx="3" fill="#e5e7eb" stroke="${C.ink}"/><path d="M${x} 88 V150" stroke="${C.orange}" stroke-width="2.5"/>` + tx(x, 196, 0.85, "PA")).join("") +
+      t(190, 230, "spurs (derivações)", { s: 8, c: C.muted }) + t(190, 44, "tronco", { s: 8, c: C.orange }) +
+      mk(1, 44, 92, 44, 74) + mk(2, 220, 24, 220, 50) + mk(3, 104, 120, 128, 120) + mk(4, 300, 90, 300, 64) + mk(5, 276, 150, 258, 160) + mk(6, 160, 110, 144, 82)
+    ),
+    partes: [
+      ["Fonte / condicionador", "Alimenta o segmento e isola a comunicação da fonte."],
+      ["Tronco", "Cabo principal do segmento."],
+      ["Derivações (spurs)", "Ligam cada instrumento ao tronco."],
+      ["Terminadores", "Um em cada ponta do tronco (100 Ω + 1 µF)."],
+      ["Instrumentos", "Até ~32 por segmento (menos em área classificada ou por consumo)."],
+      ["Caixa de derivação", "Bloco com proteção contra curto em cada spur."],
+    ],
+    cadeia: [["Plug", "Fonte"], ["Cable", "Tronco"], ["Network", "Derivações"], ["Gauge", "Instrumentos"], ["Server", "Sistema"]],
+    exemplo: [["Velocidade (H1/PA)", "31,25 kbit/s"], ["Comprimento total", "até 1 900 m"], ["Consumo: 10 × 20 mA", "200 mA ≤ 500 mA da fonte ✓"], ["Tensão mínima no instrumento", "9 V"]],
+    atencao: "Falta de terminador ou terminador duplo derruba a comunicação do segmento inteiro.",
+    chave: "Um par de fios leva energia e dados para vários instrumentos.",
+  },
+  {
+    id: "modbus-rtu", mod: 15, titulo: "Modbus RTU em RS-485", sub: "Um mestre pergunta, cada escravo responde pelo seu endereço.",
+    arte: svg(
+      block(10, 96, 66, 50, "Mestre|CLP", C.navy, "#fff", 9) +
+      `<path d="M76 112 H300 M76 128 H300" stroke="${C.ink}" stroke-width="2"/>` + t(290, 106, "A", { s: 8, a: "end" }) + t(290, 142, "B", { s: 8, a: "end" }) +
+      [[130, 1], [200, 5], [270, 12]].map(([x, n]) => `<path d="M${x} 112 V170 M${x + 8} 128 V170" stroke="${C.ink}" stroke-width="1.5"/>` + block(x - 22, 170, 52, 40, `Escravo|end. ${n}`, C.paper, C.ink, 7.5)).join("") +
+      `<rect x="80" y="104" width="10" height="32" rx="2" fill="${C.yellow}" stroke="${C.ink}"/><rect x="300" y="104" width="10" height="32" rx="2" fill="${C.yellow}" stroke="${C.ink}"/>` +
+      block(100, 26, 150, 40, "03 · end. 5 · reg. 0 · 9 600 8N1", C.paper, C.blue, 7.5) + arrow(175, 66, 205, 104, C.blue, 1.2) +
+      mk(1, 44, 80, 44, 96) + mk(2, 200, 230, 204, 210) + mk(3, 164, 84, 160, 110) + mk(4, 300, 160, 305, 136) + mk(5, 120, 154, 132, 140) + mk(6, 260, 40, 250, 46)
+    ),
+    partes: [
+      ["Mestre", "CLP ou SCADA: é o único que inicia a comunicação."],
+      ["Escravos", "Endereços de 1 a 247, sem repetir."],
+      ["Par A/B", "Par trançado blindado, mais a referência comum."],
+      ["Terminação", "Resistor de 120 Ω nas duas pontas do barramento."],
+      ["Topologia", "Barramento em série (daisy-chain), sem estrela."],
+      ["Quadro", "Função, endereço, registrador e parâmetros seriais."],
+    ],
+    cadeia: [["Cpu", "Mestre pergunta"], ["Cable", "RS-485"], ["Server", "Escravo responde"], ["Database", "Registradores"]],
+    exemplo: [["Escravo", "endereço 5"], ["Função", "03 (holding registers)"], ["Registrador 40001", "endereço 0"], ["Serial", "9 600 bps, 8N1"]],
+    atencao: "Todos no barramento precisam do mesmo baud rate e paridade, e endereços nunca podem se repetir.",
+    chave: "Simples e universal: quase todo medidor, inversor e controlador fala Modbus.",
+  },
+  {
+    id: "io-link", mod: 15, titulo: "IO-Link", sub: "Sensor inteligente com cabo comum: dado, parâmetro e diagnóstico.",
+    arte: svg(
+      `<rect x="110" y="20" width="100" height="70" rx="6" fill="${C.navy}"/>` + t(160, 46, "Mestre IO-Link", { s: 8.5, c: "#fff" }) +
+      [0, 1, 2, 3].map((i) => `<circle cx="${126 + i * 22}" cy="72" r="6" fill="#cfd6de" stroke="#fff"/>`).join("") +
+      `<path d="M160 20 V6 H300" fill="none" stroke="${C.green}" stroke-width="2.5"/>` + t(296, 18, "Profinet / EtherNet/IP", { s: 7.5, c: C.green, a: "end" }) +
+      [[40, "sensor"], [120, "válvula"], [200, "sensor"], [280, "display"]].map(([x, l], i) => `<path d="M${126 + i * 22} 78 C${126 + i * 22} 130 ${x} 120 ${x} 168" fill="none" stroke="#3a4654" stroke-width="3"/>` +
+        `<rect x="${x - 22}" y="168" width="44" height="34" rx="6" fill="url(#fvBl)" stroke="${C.navy}"/>` + t(x, 216, l, { s: 7.5 })).join("") +
+      t(60, 156, "M12 · 3 fios · até 20 m", { s: 7.5, c: C.muted }) +
+      mk(1, 92, 40, 110, 46) + mk(2, 74, 116, 70, 136) + mk(3, 40, 230, 40, 202) + mk(4, 236, 56, 210, 60) + mk(5, 186, 30, 186, 6) + mk(6, 280, 140, 280, 168)
+    ),
+    partes: [
+      ["Mestre IO-Link", "Cada porta atende um dispositivo (ponto a ponto)."],
+      ["Cabo M12 de 3 fios", "Cabo padrão, sem blindagem, até 20 m."],
+      ["Dispositivo IO-Link", "Sensor ou atuador com dados de processo e diagnóstico."],
+      ["Parâmetros (IODD)", "Arquivo que descreve o dispositivo e seus ajustes."],
+      ["Rede superior", "O mestre entrega tudo ao CLP via Profinet, EtherNet/IP etc."],
+      ["Backup de parâmetros", "Na troca do sensor, o mestre recarrega a configuração."],
+    ],
+    cadeia: [["Gauge", "Sensor"], ["Cable", "Cabo M12"], ["Cpu", "Mestre"], ["Network", "Rede industrial"], ["Monitor", "CLP"]],
+    exemplo: [["COM1 / COM2 / COM3", "4,8 / 38,4 / 230,4 kbit/s"], ["Cabo", "até 20 m"], ["Troca de sensor", "parâmetros recarregados"], ["Sinal adicional", "diagnóstico e contador"]],
+    atencao: "IO-Link não é rede: cada dispositivo ocupa uma porta do mestre.",
+    chave: "Tira o sensor do modo “caixa-preta”: o CLP vê valor, parâmetro e estado.",
   },
 ];
 
