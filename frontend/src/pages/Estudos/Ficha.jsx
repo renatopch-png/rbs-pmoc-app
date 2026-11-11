@@ -1,10 +1,10 @@
 import { useState } from "react";
 import {
-  Activity, Antenna, Fan, ArrowRight, BookOpen, Cable, Calculator, Circle, ClipboardCheck, Cpu, Database, Droplets, Eye, Factory, Flame, Gauge, GraduationCap, Hand, KeyRound, Layers, Magnet, Monitor, MoveVertical, Plug, Radio, Repeat, Ruler, Scale, Server, Settings, Shield, ShieldAlert, Sigma, Siren, SlidersHorizontal, Spline, Target, Thermometer, Timer, ToggleRight, TriangleAlert, Waves, Wind, Wrench, Zap,
+  Activity, Antenna, Fan, ArrowRight, BookOpen, Cable, Calculator, Circle, ClipboardCheck, Cpu, Database, Droplets, Eye, Factory, Flame, Gauge, GraduationCap, Hand, KeyRound, Layers, Magnet, Monitor, Network, MoveVertical, Plug, Radio, Repeat, Ruler, Scale, Server, Settings, Shield, ShieldAlert, Sigma, Siren, SlidersHorizontal, Spline, Target, Thermometer, Timer, ToggleRight, TriangleAlert, Waves, Wind, Wrench, Zap,
 } from "lucide-react";
 
 // Só os ícones usados nas fichas (importar a biblioteca inteira aumenta o app em ~1 MB).
-const Icones = { Activity, Antenna, Fan, Fan, ArrowRight, BookOpen, Cable, Calculator, Circle, ClipboardCheck, Cpu, Database, Droplets, Eye, Factory, Flame, Gauge, GraduationCap, Hand, KeyRound, Layers, Magnet, Monitor, MoveVertical, Plug, Radio, Repeat, Ruler, Scale, Server, Settings, Shield, ShieldAlert, Sigma, Siren, SlidersHorizontal, Spline, Target, Thermometer, Timer, ToggleRight, TriangleAlert, Waves, Wind, Wrench, Zap };
+const Icones = { Activity, Antenna, Fan, Fan, ArrowRight, BookOpen, Cable, Calculator, Circle, ClipboardCheck, Cpu, Database, Droplets, Eye, Factory, Flame, Gauge, GraduationCap, Hand, KeyRound, Layers, Magnet, Monitor, Network, MoveVertical, Plug, Radio, Repeat, Ruler, Scale, Server, Settings, Shield, ShieldAlert, Sigma, Siren, SlidersHorizontal, Spline, Target, Thermometer, Timer, ToggleRight, TriangleAlert, Waves, Wind, Wrench, Zap };
 
 const pad = (n) => String(n).padStart(2, "0");
 
