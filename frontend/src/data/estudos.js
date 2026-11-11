@@ -920,7 +920,7 @@ export const COLECOES = [
        "SA = T sucção − T saturação (evaporação)",
        "Útil: na saída do evaporador",
        "Total: na entrada do compressor",
-       "Típico com VET: ~5 a 8 K",
+       "Típico com VET: ~3 a 7 K (ajuste de fábrica)",
        "Garante que só vapor chegue ao compressor"
       ]
      },
