@@ -51,7 +51,7 @@ export default defineConfig({
             handler: "CacheFirst",
             options: {
               cacheName: "estudos-pdf",
-              expiration: { maxEntries: 60 },
+              expiration: { maxEntries: 150 },
               rangeRequests: true,
             },
           },
