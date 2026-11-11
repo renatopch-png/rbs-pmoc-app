@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { PRATICA } from "../../data/estudosPratica";
-import { Simulado } from "./Pratica";
+import { ExemploResolvido, Simulado, Tabela } from "./Pratica";
 import { ChevronLeft, ChevronRight, ClipboardCheck, Download, FileText, Layers, X } from "lucide-react";
 import { BOTAO, BOTAO_SEC, Filtros, Painel } from "../../components/ui";
 import Ficha from "./Ficha";
@@ -40,7 +40,7 @@ export default function FichasSecao({ serie, visiveis }) {
   const MODULOS = serie.modulos;
   const [mod, setMod] = useState("todos");
   const [aberta, setAberta] = useState(null);
-  const [simulado, setSimulado] = useState(false);
+  const [pratica, setPratica] = useState(null);
   const lista = visiveis.filter((f) => mod === "todos" || f.mod === Number(mod));
   const opcoes = [
     { valor: "todos", rotulo: "Todos", qtd: visiveis.length },
@@ -58,7 +58,7 @@ export default function FichasSecao({ serie, visiveis }) {
         <div className="flex w-full gap-2 sm:w-auto [&>*]:flex-1 sm:[&>*]:flex-none">
           <a href={serie.pdf} target="_blank" rel="noopener noreferrer" className={BOTAO}><FileText size={16} /> PDF completo</a>
           <a href={serie.pdf} download className={BOTAO_SEC}><Download size={16} /> Baixar</a>
-          {serie.simulado && <button type="button" onClick={() => setSimulado(true)} className={BOTAO_SEC}><ClipboardCheck size={16} /> Simulado</button>}
+          {serie.simulado && <button type="button" onClick={() => setPratica("simulado")} className={BOTAO_SEC}><ClipboardCheck size={16} /> Prática</button>}
         </div>
       </div>
 
@@ -81,9 +81,35 @@ export default function FichasSecao({ serie, visiveis }) {
         ))}
       </div>
 
-      {simulado && (
-        <Painel titulo={`Simulado · ${serie.simulado.titulo}`} aoFechar={() => setSimulado(false)}>
-          <Simulado colecao={serie.simulado} pratica={PRATICA} />
+      {pratica && (
+        <Painel titulo={`Prática · ${serie.simulado.titulo}`} aoFechar={() => setPratica(null)}>
+          <div className="space-y-4">
+            <Filtros
+              valor={pratica}
+              aoMudar={setPratica}
+              opcoes={[
+                { valor: "simulado", rotulo: "Simulado" },
+                { valor: "exemplos", rotulo: "Exemplos resolvidos", qtd: serie.simulado.topicos.length },
+              ]}
+            />
+            {pratica === "simulado" && <Simulado colecao={serie.simulado} pratica={PRATICA} />}
+            {pratica === "exemplos" && serie.simulado.topicos.map((t, i) => {
+              const p = PRATICA[`${serie.simulado.id}/${t.id}`];
+              if (!p) return null;
+              return (
+                <details key={t.id} className="group rounded-xl border border-slate-200 p-3 open:border-rbs">
+                  <summary className="cursor-pointer list-none font-extrabold text-rbs-navy">
+                    <span className="mr-2 text-xs font-bold text-slate-400">{pad(i + 1)}</span>{t.titulo}
+                  </summary>
+                  <div className="mt-3 space-y-3">
+                    <ExemploResolvido exemplo={p.exemplo} />
+                    {p.tabela && <Tabela tabela={p.tabela} />}
+                  </div>
+                </details>
+              );
+            })}
+            <p className="text-xs text-slate-400">Valores típicos: confirme sempre no datasheet do fabricante e na norma vigente.</p>
+          </div>
         </Painel>
       )}
 
