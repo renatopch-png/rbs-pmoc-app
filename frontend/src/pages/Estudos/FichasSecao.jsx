@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Download, FileText, Layers, X } from "lucide-react";
-import { BOTAO, BOTAO_SEC, Filtros } from "../../components/ui";
+import { PRATICA } from "../../data/estudosPratica";
+import { Simulado } from "./Pratica";
+import { ChevronLeft, ChevronRight, ClipboardCheck, Download, FileText, Layers, X } from "lucide-react";
+import { BOTAO, BOTAO_SEC, Filtros, Painel } from "../../components/ui";
 import Ficha from "./Ficha";
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -38,6 +40,7 @@ export default function FichasSecao({ serie, visiveis }) {
   const MODULOS = serie.modulos;
   const [mod, setMod] = useState("todos");
   const [aberta, setAberta] = useState(null);
+  const [simulado, setSimulado] = useState(false);
   const lista = visiveis.filter((f) => mod === "todos" || f.mod === Number(mod));
   const opcoes = [
     { valor: "todos", rotulo: "Todos", qtd: visiveis.length },
@@ -55,6 +58,7 @@ export default function FichasSecao({ serie, visiveis }) {
         <div className="flex w-full gap-2 sm:w-auto [&>*]:flex-1 sm:[&>*]:flex-none">
           <a href={serie.pdf} target="_blank" rel="noopener noreferrer" className={BOTAO}><FileText size={16} /> PDF completo</a>
           <a href={serie.pdf} download className={BOTAO_SEC}><Download size={16} /> Baixar</a>
+          {serie.simulado && <button type="button" onClick={() => setSimulado(true)} className={BOTAO_SEC}><ClipboardCheck size={16} /> Simulado</button>}
         </div>
       </div>
 
@@ -76,6 +80,12 @@ export default function FichasSecao({ serie, visiveis }) {
           </button>
         ))}
       </div>
+
+      {simulado && (
+        <Painel titulo={`Simulado · ${serie.simulado.titulo}`} aoFechar={() => setSimulado(false)}>
+          <Simulado colecao={serie.simulado} pratica={PRATICA} />
+        </Painel>
+      )}
 
       {aberta !== null && lista[aberta] && <Visualizador serie={serie} lista={lista} indice={aberta} aoMudar={setAberta} aoFechar={() => setAberta(null)} />}
     </section>

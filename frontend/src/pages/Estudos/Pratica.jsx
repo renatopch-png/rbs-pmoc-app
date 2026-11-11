@@ -124,7 +124,7 @@ function embaralhar(lista) {
 export function Simulado({ colecao, pratica, total = 10 }) {
   const [rodada, setRodada] = useState(0);
   const questoes = useMemo(() => embaralhar(
-    colecao.topicos.flatMap((t, i) => (pratica[`${colecao.id}/${t.id}`]?.quiz || []).map((q) => ({ ...q, origem: `Mapa ${String(i + 1).padStart(2, "0")} · ${t.titulo}` }))),
+    colecao.topicos.flatMap((t, i) => (pratica[`${colecao.id}/${t.id}`]?.quiz || []).map((q) => ({ ...q, origem: `Tema ${String(i + 1).padStart(2, "0")} · ${t.titulo}` }))),
   ).slice(0, total), [colecao, pratica, total, rodada]);
 
   return (
