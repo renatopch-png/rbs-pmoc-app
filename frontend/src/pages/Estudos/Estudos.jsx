@@ -4,6 +4,8 @@ import { modulo } from "../../data/menu";
 import { COLECOES } from "../../data/estudos";
 import { PRATICA } from "../../data/estudosPratica";
 import { ExemploResolvido, Quiz, Simulado, Tabela } from "./Pratica";
+import { FICHAS } from "../../data/fichasInstrumentacao";
+import FichasSecao from "./FichasSecao";
 import { BOTAO, BOTAO_SEC, Badge, Busca, Cabecalho, Filtros, Painel, Vazio } from "../../components/ui";
 
 const MOD = modulo("/estudos");
@@ -48,16 +50,20 @@ export default function Estudos() {
     })), [filtro, termo]);
 
   const pratica = aberto ? PRATICA[chave(aberto.c, aberto.t)] : null;
-  const total = COLECOES.reduce((s, c) => s + c.topicos.length, 0);
+  const fichasVisiveis = filtro === "todas" || filtro === "fichas"
+    ? FICHAS.filter((f) => !termo || normalizar([f.titulo, f.sub, f.atencao, f.chave, ...f.partes.flat(), ...f.exemplo.flat()].join(" ")).includes(termo))
+    : [];
+  const total = COLECOES.reduce((s, c) => s + c.topicos.length, 0) + FICHAS.length;
   const opcoes = [
     { valor: "todas", rotulo: "Todas", qtd: total },
+    { valor: "fichas", rotulo: "Fichas visuais", qtd: FICHAS.length },
     ...COLECOES.map((c) => ({ valor: c.id, rotulo: c.titulo, qtd: c.topicos.length })),
   ];
-  const nada = colecoes.every((c) => c.visiveis.length === 0);
+  const nada = fichasVisiveis.length === 0 && colecoes.every((c) => c.visiveis.length === 0);
 
   return (
     <div className="space-y-4">
-      <Cabecalho modulo={MOD} subtitulo={`${total} mapas técnicos em PDF, organizados por tópico`} />
+      <Cabecalho modulo={MOD} subtitulo={`${total} materiais: fichas visuais, mapas e prática, organizados por tópico`} />
 
       <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm">
         <Busca valor={busca} aoMudar={setBusca} placeholder="Buscar tópico, fórmula ou termo (ex.: Pt100, degelo, 4–20 mA)" />
@@ -65,6 +71,8 @@ export default function Estudos() {
       </div>
 
       {nada && <Vazio>Nenhum tópico encontrado para “{busca}”.</Vazio>}
+
+      {fichasVisiveis.length > 0 && <FichasSecao visiveis={fichasVisiveis} />}
 
       {colecoes.filter((c) => c.visiveis.length > 0).map((c) => {
         const feitos = c.topicos.filter((t) => concluidos.has(chave(c, t))).length;
