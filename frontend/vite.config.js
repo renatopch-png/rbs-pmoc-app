@@ -42,6 +42,20 @@ export default defineConfig({
         // cache básico dos arquivos do app; dados do Firestore continuam
         // exigindo internet (não há cache offline de dados neste momento)
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        // PDFs de "Meus Estudos" abrem como arquivo (não como rota do app)
+        // e ficam guardados no aparelho depois da primeira abertura.
+        navigateFallbackDenylist: [/^\/estudos\//],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith("/estudos/") && url.pathname.endsWith(".pdf"),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "estudos-pdf",
+              expiration: { maxEntries: 60 },
+              rangeRequests: true,
+            },
+          },
+        ],
         // Versão nova assume na hora e apaga os arquivos antigos do cache.
         skipWaiting: true,
         clientsClaim: true,
