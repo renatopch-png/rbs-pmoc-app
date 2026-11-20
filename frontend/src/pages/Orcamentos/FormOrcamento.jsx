@@ -156,6 +156,8 @@ export default function FormOrcamento() {
       clienteNome: cliente.nome || "",
       clienteEndereco: cliente.endereco || "",
       clienteTelefone: cliente.telefone || "",
+      clienteContato: cliente.contato || "",
+      clienteEdificio: cliente.edificio || "",
       qtdServicos: normalizados.length,
       equipamentoIds: [...new Set(normalizados.map((i) => i.equipamentoId).filter(Boolean))],
       atualizadoEm: serverTimestamp(),

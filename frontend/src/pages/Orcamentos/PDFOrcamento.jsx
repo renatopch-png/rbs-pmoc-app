@@ -60,7 +60,24 @@ export default function PDFOrcamento() {
 
   useEffect(() => {
     getDoc(doc(db, "orcamentos", id))
-      .then((snap) => (snap.exists() ? setO({ id: snap.id, ...snap.data() }) : setErro("Orçamento não encontrado.")))
+      .then(async (snap) => {
+        if (!snap.exists()) return setErro("Orçamento não encontrado.");
+        const dados = { id: snap.id, ...snap.data() };
+        // Busca o cadastro atual do cliente para trazer endereço e contato
+        if (dados.clienteId) {
+          try {
+            const c = await getDoc(doc(db, "clientes", dados.clienteId));
+            if (c.exists()) {
+              const cli = c.data();
+              dados.clienteEndereco = cli.endereco || dados.clienteEndereco || "";
+              dados.clienteTelefone = cli.telefone || dados.clienteTelefone || "";
+              dados.clienteContato = cli.contato || dados.clienteContato || "";
+              dados.clienteEdificio = cli.edificio || dados.clienteEdificio || "";
+            }
+          } catch { /* mantém os dados gravados no orçamento */ }
+        }
+        setO(dados);
+      })
       .catch(() => setErro("Não foi possível carregar o orçamento."));
   }, [id]);
 
@@ -185,6 +202,9 @@ export default function PDFOrcamento() {
           <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
             <tbody>
               <tr><td style={{ padding: 3 }}><b>Cliente:</b> {o.clienteNome}</td><td style={{ padding: 3, textAlign: "right" }}><b>Data:</b> {data}</td></tr>
+              {o.clienteEdificio && <tr><td colSpan={2} style={{ padding: 3 }}><b>Edifício:</b> {o.clienteEdificio}</td></tr>}
+              <tr><td colSpan={2} style={{ padding: 3 }}><b>Endereço:</b> {o.clienteEndereco || "—"}</td></tr>
+              <tr><td colSpan={2} style={{ padding: 3 }}><b>Contato:</b> {[o.clienteContato, o.clienteTelefone].filter(Boolean).join(" • ") || "—"}</td></tr>
               {o.objeto && <tr><td colSpan={2} style={{ padding: 3 }}><b>Objeto:</b> {o.objeto}</td></tr>}
               <tr><td style={{ padding: 3 }}><b>Validade:</b> {o.validadeDias ? `${o.validadeDias} dias` : "—"}</td><td style={{ padding: 3, textAlign: "right" }}><b>Prazo exec.:</b> {o.prazoExecucao || "A combinar"}</td></tr>
             </tbody>
