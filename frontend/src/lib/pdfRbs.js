@@ -7,7 +7,7 @@ export const ENDERECO_RBS = "Rua Capitão Ferreira, nº 86 — Rio de Janeiro/RJ
 const RODAPE = `RBS Refrigeração e Elétrica | CNPJ ${DADOS_RBS.cnpj}`;
 
 // Cabeçalho e rodapé são desenhados em todas as páginas do PDF.
-export function gerarPdfRbs(elemento, filename) {
+function montarPdfRbs(elemento, filename) {
   return html2pdf()
     .set({
       margin: [34, 14, 16, 14],
@@ -33,6 +33,15 @@ export function gerarPdfRbs(elemento, filename) {
         pdf.text(`CNPJ ${DADOS_RBS.cnpj} • ${ENDERECO_RBS}`, 14, 22);
         pdf.setFontSize(8).setTextColor(100).text(`${RODAPE} | Página ${p} de ${total}`, largura / 2, altura - 7, { align: "center" });
       }
-    })
-    .save();
+    });
+}
+
+export function gerarPdfRbs(elemento, filename) {
+  return montarPdfRbs(elemento, filename).save();
+}
+
+// Gera o PDF na hora (sempre com os dados atuais da tela) e devolve como File, para compartilhar.
+export async function gerarArquivoPdfRbs(elemento, filename) {
+  const blob = await montarPdfRbs(elemento, filename).output("blob");
+  return new File([blob], filename, { type: "application/pdf" });
 }
