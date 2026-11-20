@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { DADOS_RBS } from "../../services/ServicoWhatsApp";
 import { paraData } from "../../lib/agenda";
 import { CONDICAO_ETAPAS, brl, numeroFmt, totalItem } from "../../lib/orcamentos";
-import { ENDERECO_RBS as ENDERECO, EMPRESA, LINHA_RBS as LINHA, gerarPdfRbs } from "../../lib/pdfRbs";
+import { ENDERECO_RBS as ENDERECO, EMPRESA, LINHA_RBS as LINHA, gerarArquivoPdfRbs, gerarPdfRbs } from "../../lib/pdfRbs";
 
 
 function Secao({ titulo, children }) {
@@ -68,7 +68,10 @@ export default function PDFOrcamento() {
   if (!o) return <p className="p-4 text-sm text-gray-500">Carregando...</p>;
 
   const data = paraData(o.criadoEm)?.toLocaleDateString("pt-BR") || "—";
-  const nomeArquivo = `Orcamento_RBS_${numeroFmt(o.numero)}_${(o.clienteNome || "cliente").replace(/[^\p{L}\p{N}]+/gu, "_")}.pdf`;
+  // Data e hora no nome: cada PDF gerado é um arquivo novo, sem confundir com versões antigas no celular.
+  const agora = new Date();
+  const carimbo = `${String(agora.getDate()).padStart(2, "0")}-${String(agora.getMonth() + 1).padStart(2, "0")}_${String(agora.getHours()).padStart(2, "0")}h${String(agora.getMinutes()).padStart(2, "0")}`;
+  const nomeArquivo = `Orcamento_RBS_${numeroFmt(o.numero)}_${(o.clienteNome || "cliente").replace(/[^\p{L}\p{N}]+/gu, "_")}_${carimbo}.pdf`;
   const maoObra = (o.itens || []).filter((i) => i.tipo === "Mão de Obra");
   const materiais = (o.itens || []).filter((i) => i.tipo === "Material");
   const condicoes = [
@@ -76,7 +79,7 @@ export default function PDFOrcamento() {
     o.prazoExecucao && `Prazo: ${o.prazoExecucao}`,
     o.garantia && `Garantia: ${o.garantia}`,
     o.naoInclusos && `Não inclusos: ${o.naoInclusos}`,
-    `Validade da proposta: ${o.validadeDias} dias a partir de ${data}`,
+    o.validadeDias && `Validade da proposta: ${o.validadeDias} dias a partir de ${data}`,
     o.requerArt && "Serviço com emissão de ART/TRT do responsável técnico.",
     o.malhaAterramento && "Inclui malha de aterramento.",
     o.complexidadeAlvenaria && `Alvenaria: ${o.complexidadeAlvenaria}`,
@@ -120,10 +123,30 @@ export default function PDFOrcamento() {
     }
   }
 
-  function whatsapp() {
+  async function whatsapp() {
+    const mensagem = `Olá! Segue o orçamento nº ${numeroFmt(o.numero)} da RBS, no valor de ${brl(o.valorTotal)}.`;
+    setGerando(true);
+    try {
+      // Gera o PDF agora, com os dados atuais, e compartilha direto (WhatsApp, e-mail...).
+      const arquivo = await gerarArquivoPdfRbs(corpo.current, nomeArquivo);
+      if (navigator.canShare?.({ files: [arquivo] })) {
+        try {
+          await navigator.share({ files: [arquivo], title: `Orçamento ${numeroFmt(o.numero)}`, text: mensagem });
+        } catch (e) {
+          if (e?.name !== "AbortError") throw e;
+        }
+        return;
+      }
+    } catch {
+      // Se o compartilhamento falhar, segue para o método antigo abaixo.
+    } finally {
+      setGerando(false);
+    }
+    // Sem compartilhamento de arquivo (computador): baixa o PDF novo e abre o WhatsApp para anexar.
+    await baixar();
     const destino = (o.clienteTelefone || "").replace(/\D/g, "");
     const numero = destino && !destino.startsWith("55") ? `55${destino}` : destino;
-    const texto = encodeURIComponent(`Olá! Segue o orçamento nº ${numeroFmt(o.numero)} da RBS, no valor de ${brl(o.valorTotal)}. O PDF vai anexo nesta conversa.`);
+    const texto = encodeURIComponent(`${mensagem} O PDF (${nomeArquivo}) vai anexo nesta conversa.`);
     window.open(`https://wa.me/${numero}?text=${texto}`, "_blank");
   }
 
@@ -146,7 +169,7 @@ export default function PDFOrcamento() {
       <div className="flex flex-wrap items-center gap-2">
         <Link to={`/orcamentos/${id}`} className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"><ArrowLeft size={16} /> Editar</Link>
         <button onClick={baixar} disabled={gerando} className="inline-flex items-center gap-1 rounded-lg bg-rbs px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"><Download size={16} /> {gerando ? "Gerando..." : "Baixar PDF"}</button>
-        <button onClick={whatsapp} className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white"><MessageCircle size={16} /> Enviar mensagem</button>
+        <button onClick={whatsapp} disabled={gerando} className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"><MessageCircle size={16} /> Enviar PDF</button>
         {isAdmin && (o.status === "Aprovado" || o.status === "Concluído") && (
           <button onClick={registrarRecebimento} className="inline-flex items-center gap-1 rounded-lg border border-green-600 bg-white px-4 py-2 text-sm font-semibold text-green-700"><HandCoins size={16} /> Registrar recebimento</button>
         )}
@@ -163,7 +186,7 @@ export default function PDFOrcamento() {
             <tbody>
               <tr><td style={{ padding: 3 }}><b>Cliente:</b> {o.clienteNome}</td><td style={{ padding: 3, textAlign: "right" }}><b>Data:</b> {data}</td></tr>
               {o.objeto && <tr><td colSpan={2} style={{ padding: 3 }}><b>Objeto:</b> {o.objeto}</td></tr>}
-              <tr><td style={{ padding: 3 }}><b>Validade:</b> {o.validadeDias} dias</td><td style={{ padding: 3, textAlign: "right" }}><b>Prazo exec.:</b> {o.prazoExecucao || "A combinar"}</td></tr>
+              <tr><td style={{ padding: 3 }}><b>Validade:</b> {o.validadeDias ? `${o.validadeDias} dias` : "—"}</td><td style={{ padding: 3, textAlign: "right" }}><b>Prazo exec.:</b> {o.prazoExecucao || "A combinar"}</td></tr>
             </tbody>
           </table>
           {secoes.map((s, i) => <Secao key={s.titulo} titulo={`${i + 1}. ${s.titulo}`}>{s.conteudo}</Secao>)}
