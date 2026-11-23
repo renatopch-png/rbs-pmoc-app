@@ -40,6 +40,7 @@ import PDFLaudo from "./pages/Laudos/PDFLaudo";
 import Anotacoes from "./pages/Anotacoes/Anotacoes";
 import CentralManutencoes from "./pages/Manutencoes/CentralManutencoes";
 import Etiquetas from "./pages/Etiquetas/Etiquetas";
+import Importar from "./pages/Importar/Importar";
 // Carregada sob demanda: o material de estudo (fichas, mapas, prática) é grande.
 const Estudos = lazy(() => import("./pages/Estudos/Estudos"));
 import { MODULOS_EM_BREVE } from "./data/menu";
@@ -62,6 +63,7 @@ export default function App() {
         <Route path="/clientes" element={<Privada><ListaClientes /></Privada>} />
         <Route path="/equipamentos" element={<Privada><ListaEquipamentos /></Privada>} />
         <Route path="/cronograma" element={<Privada><Agendador /></Privada>} />
+        <Route path="/importar" element={<Privada><Importar /></Privada>} />
         <Route path="/ordens-servico" element={<Privada><ListaOS /></Privada>} />
         <Route path="/ordens-servico/executar/:equipamentoId" element={<Privada><ExecucaoOS /></Privada>} />
         <Route path="/relatorios/pmoc/:osId" element={<Privada><GeradorPMOC /></Privada>} />

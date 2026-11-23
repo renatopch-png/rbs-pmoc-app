@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, query, where, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { lerColecao, proximaManutencaoEquipamento } from "../../lib/modulos";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { linkDoServico } from "../../lib/googleAgenda";
+import { paraInputData } from "../../lib/financeiro";
+
+const dataBr = (s) => (s ? s.split("-").reverse().join("/") : "");
 
 export default function Agendador() {
   const [agendamentos, setAgendamentos] = useState([]);
@@ -9,6 +15,9 @@ export default function Agendador() {
   const [erro, setErro] = useState("");
   const [proximasManutencoes, setProximasManutencoes] = useState([]);
   const [filtroCliente, setFiltroCliente] = useState("");
+  const [agendados, setAgendados] = useState([]);
+  const [mapaClientes, setMapaClientes] = useState(new Map());
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     (async () => {
@@ -20,6 +29,16 @@ export default function Agendador() {
         // O equipamento guarda só o clienteId: nome e telefone vêm do cadastro de clientes.
         const snapCli = await getDocs(collection(db, "clientes"));
         const clientes = new Map(snapCli.docs.map((d) => [d.id, d.data()]));
+        setMapaClientes(clientes);
+
+        // Serviços com data marcada (Equipe ou lançados pelo Claude), de hoje em diante.
+        if (isAdmin) {
+          const hojeTxt = paraInputData();
+          const servs = await lerColecao("servicos_equipe");
+          setAgendados(servs
+            .filter((x) => x.data >= hojeTxt && x.status !== "Cancelado" && x.status !== "Concluído")
+            .sort((a, b) => `${a.data}${a.hora}`.localeCompare(`${b.data}${b.hora}`)));
+        }
 
         // Busca todas as ordens de serviço
         const snapOS = await getDocs(collection(db, "ordens_servico"));
@@ -64,7 +83,7 @@ export default function Agendador() {
         setCarregando(false);
       }
     })();
-  }, []);
+  }, [isAdmin]);
 
   function chamar(agenda) {
     const destino = (agenda.clienteTelefone || "").replace(/\D/g, "");
@@ -123,6 +142,31 @@ export default function Agendador() {
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {erro}
         </div>
+      )}
+
+      {agendados.length > 0 && (
+        <section className="mb-6">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-gray-900">📌 Serviços agendados</h2>
+            <Link to="/equipe" className="text-sm font-semibold text-blue-700">Gerenciar</Link>
+          </div>
+          <div className="space-y-2">
+            {agendados.map((s) => {
+              const cli = mapaClientes.get(s.clienteId);
+              return (
+                <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold uppercase tracking-wide text-blue-700">👤 {s.clienteNome || "Sem cliente"}</p>
+                    <h3 className="font-semibold text-gray-900">{s.titulo}</h3>
+                    <p className="text-sm text-gray-700"><strong>{dataBr(s.data)}</strong> {s.hora}{s.horaFim ? `–${s.horaFim}` : ""} • {s.funcionarioNome} • {s.status}</p>
+                    {(s.local || cli?.endereco) && <p className="text-xs text-gray-500">📍 {s.local || cli.endereco}</p>}
+                  </div>
+                  <a href={linkDoServico(s, cli)} target="_blank" rel="noreferrer" className="rounded-lg border border-blue-700 bg-white px-3 py-1.5 text-xs font-semibold text-blue-800">📅 Google Agenda</a>
+                </div>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {carregando ? (

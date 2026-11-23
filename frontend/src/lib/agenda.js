@@ -15,7 +15,7 @@ export function inicioDaSemana(hoje = new Date()) {
 
 // Mesma regra do Agendador: última OS do equipamento + periodicidade.
 // Os itens do Cadastro Preventivo entram pela data da próxima visita.
-export function agendaSemanal(equipamentos, ordens, hoje = new Date(), preventivos = []) {
+export function agendaSemanal(equipamentos, ordens, hoje = new Date(), preventivos = [], agendados = []) {
   const inicio = inicioDaSemana(hoje);
   const dias = Array.from({ length: 7 }, (_, i) => {
     const data = new Date(inicio);
@@ -44,6 +44,14 @@ export function agendaSemanal(equipamentos, ordens, hoje = new Date(), preventiv
     const data = new Date(a, m - 1, d);
     const dia = dias.find((x) => x.data.getTime() === data.getTime());
     if (dia) dia.servicos.push({ id: `prev-${p.id}`, nome: `${p.clienteNome} • ${p.servico}`, preventivo: true });
+  });
+
+  // Serviços agendados (Equipe / importados): entram pela data marcada.
+  agendados.filter((s) => s.data && s.status !== "Cancelado" && s.status !== "Concluído").forEach((s) => {
+    const [a, m, d] = String(s.data).split("-").map(Number);
+    const data = new Date(a, m - 1, d);
+    const dia = dias.find((x) => x.data.getTime() === data.getTime());
+    if (dia) dia.servicos.push({ id: `srv-${s.id}`, nome: `${s.hora || ""} ${s.clienteNome || s.titulo}`.trim(), agendado: true });
   });
   return dias;
 }

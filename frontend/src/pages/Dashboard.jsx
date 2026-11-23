@@ -69,6 +69,7 @@ export default function Dashboard() {
   useEffect(() => {
     (async () => {
       const [prev, gar] = await Promise.all([lerColecao("preventivos"), lerColecao("garantias")]);
+      const agendados = isAdmin ? await lerColecao("servicos_equipe") : [];
       setPreventivos(prev);
       setGarantias(gar);
       try {
@@ -81,10 +82,11 @@ export default function Dashboard() {
           os.docs.map((d) => ({ id: d.id, ...d.data() })),
           new Date(),
           prev,
+          agendados,
         ));
       } catch (e) {
         console.error("Erro ao carregar a agenda:", e);
-        setSemana(agendaSemanal([], [], new Date(), prev));
+        setSemana(agendaSemanal([], [], new Date(), prev, agendados));
       }
       await carregarOrcamentos();
       if (isAdmin) {
@@ -227,7 +229,7 @@ export default function Dashboard() {
           <Selo icone={CalendarDays} cor="from-blue-500 to-blue-700" />
           <div className="flex-1">
             <h2 className="font-extrabold text-rbs-navy">Agenda Semanal <span className="text-blue-600">({totalSemana})</span></h2>
-            <p className="text-sm text-slate-500">Equipamentos e preventivos desta semana</p>
+            <p className="text-sm text-slate-500">Manutenções e serviços agendados desta semana</p>
           </div>
           <Link to="/cronograma" className="text-sm font-bold text-blue-700">Ver todos →</Link>
         </div>
@@ -242,7 +244,7 @@ export default function Dashboard() {
                 <div className="mt-2 space-y-0.5 border-t border-slate-200 pt-2 text-xs text-slate-500">
                   {dia.servicos.length === 0
                     ? <span className="inline-flex items-center gap-1 text-slate-400"><Calendar size={12} /> Livre</span>
-                    : dia.servicos.slice(0, 3).map((s) => <p key={s.id} className={`truncate ${s.preventivo ? "font-semibold text-orange-700" : ""}`}>{s.nome}</p>)}
+                    : dia.servicos.slice(0, 3).map((s) => <p key={s.id} className={`truncate ${s.preventivo ? "font-semibold text-orange-700" : s.agendado ? "font-semibold text-blue-700" : ""}`}>{s.nome}</p>)}
                 </div>
               </div>
             );

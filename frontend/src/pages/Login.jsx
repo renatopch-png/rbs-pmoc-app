@@ -12,7 +12,9 @@ export default function Login() {
     setCarregando(true);
     try {
       await loginComGoogle();
-      navigate("/");
+      let pendente = false;
+      try { pendente = !!sessionStorage.getItem("rbs_importacao"); } catch { /* opcional */ }
+      navigate(pendente ? "/importar" : "/");
     } catch (e) {
       setErro(e.message || "Falha ao entrar. Tente novamente.");
     } finally {

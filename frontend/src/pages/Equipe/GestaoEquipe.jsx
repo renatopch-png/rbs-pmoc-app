@@ -177,12 +177,11 @@ function PainelAdmin() {
       {aba === "servicos" && (
         <section className="space-y-2">
           <div className="flex flex-wrap gap-2">
-            <button disabled={ativos.length === 0} onClick={() => setModalServ({})} className="inline-flex items-center gap-1 rounded-lg bg-rbs px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"><Plus size={16} /> Novo serviço</button>
+            <button onClick={() => setModalServ({})} className="inline-flex items-center gap-1 rounded-lg bg-rbs px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"><Plus size={16} /> Novo serviço</button>
             <select aria-label="Filtrar serviços por funcionário" className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm" value={filtroFunc} onChange={(e) => setFiltroFunc(e.target.value)}>
               <option value="">Todos</option>{funcionarios.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
             </select>
           </div>
-          {ativos.length === 0 && <p className="text-sm text-slate-500">Cadastre um funcionário para criar serviços.</p>}
           {visiveis.map((s) => (
             <div key={s.id}>
               <p className="mb-1 text-xs font-semibold text-slate-500">{dataBr(s.data)}</p>

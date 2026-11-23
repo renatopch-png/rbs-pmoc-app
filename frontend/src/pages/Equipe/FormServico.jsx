@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { CalendarPlus, X } from "lucide-react";
 import { STATUS_SERVICO, comissaoDoServico } from "../../lib/equipe";
 import { brl } from "../../lib/orcamentos";
 import { paraInputData } from "../../lib/financeiro";
 import { excluirServico, salvarServico } from "../../services/equipeService";
+import { linkDoServico } from "../../lib/googleAgenda";
+import { useAuth } from "../../context/AuthContext";
 
 const CAMPO = "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal";
 
 export default function FormServico({ inicial, funcionarios, clientes, aoFechar, aoSalvar }) {
+  const { usuario } = useAuth();
   const editando = !!inicial?.id;
   const pago = !!inicial?.comissaoPaga;
   const ativos = funcionarios.filter((x) => x.ativo !== false || x.id === inicial?.funcionarioId);
@@ -29,11 +32,12 @@ export default function FormServico({ inicial, funcionarios, clientes, aoFechar,
     e.preventDefault();
     const func = funcionarios.find((x) => x.id === f.funcionarioId);
     const cli = clientes.find((x) => x.id === f.clienteId);
-    if (!func) return setErro("Selecione o funcionário.");
+    // Sem funcionário = o próprio responsável técnico executa (sem comissão).
+    const nomeExecutor = func?.nome || inicial?.funcionarioNome || usuario?.displayName || "Responsável técnico";
     setSalvando(true);
     try {
       await salvarServico(inicial?.id, {
-        ...f, titulo: f.titulo.trim(), funcionarioNome: func.nome, clienteNome: cli?.nome || "",
+        ...f, titulo: f.titulo.trim(), funcionarioNome: nomeExecutor, clienteNome: cli?.nome || inicial?.clienteNome || "",
         valor: Number(f.valor) || 0, comissaoPercentual: Number(f.comissaoPercentual) || 0, comissaoValor: comissao,
         ...(editando ? {} : { comissaoPaga: false }),
       });
@@ -63,9 +67,9 @@ export default function FormServico({ inicial, funcionarios, clientes, aoFechar,
         </div>
         <label className="block text-xs font-semibold text-slate-600">Serviço<input required className={CAMPO} value={f.titulo} onChange={(e) => mudar("titulo", e.target.value)} /></label>
         <div className="grid grid-cols-2 gap-2">
-          <label className="block text-xs font-semibold text-slate-600">Funcionário
-            <select required className={CAMPO} value={f.funcionarioId} onChange={(e) => escolherFuncionario(e.target.value)}>
-              <option value="">Selecione</option>{ativos.map((x) => <option key={x.id} value={x.id}>{x.nome}</option>)}
+          <label className="block text-xs font-semibold text-slate-600">Executor
+            <select className={CAMPO} value={f.funcionarioId} onChange={(e) => escolherFuncionario(e.target.value)}>
+              <option value="">Eu (responsável técnico)</option>{ativos.map((x) => <option key={x.id} value={x.id}>{x.nome}</option>)}
             </select>
           </label>
           <label className="block text-xs font-semibold text-slate-600">Cliente
@@ -84,8 +88,14 @@ export default function FormServico({ inicial, funcionarios, clientes, aoFechar,
         <label className="block text-xs font-semibold text-slate-600">Descrição<textarea rows={2} className={CAMPO} value={f.descricao} onChange={(e) => mudar("descricao", e.target.value)} /></label>
         <p className="rounded-lg bg-slate-50 p-2 text-sm">Comissão: <b>{brl(comissao)}</b>{pago && " (já paga, valores bloqueados)"}</p>
         {erro && <p role="alert" className="rounded-lg bg-red-50 p-2 text-sm font-semibold text-red-800">{erro}</p>}
-        <div className="flex justify-between gap-2">
+        <div className="flex flex-wrap justify-between gap-2">
           {editando && !pago ? <button type="button" onClick={excluir} className="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700">Excluir</button> : <span />}
+          {f.data && f.titulo.trim() && (
+            <a href={linkDoServico({ ...inicial, ...f, clienteNome: clientes.find((x) => x.id === f.clienteId)?.nome || inicial?.clienteNome || "" }, clientes.find((x) => x.id === f.clienteId))}
+              target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg border border-rbs px-4 py-2 text-sm font-semibold text-rbs">
+              <CalendarPlus size={16} /> Google Agenda
+            </a>
+          )}
           <button disabled={salvando} className="rounded-lg bg-rbs px-6 py-2 text-sm font-semibold text-white disabled:opacity-50">{salvando ? "Salvando..." : "Salvar"}</button>
         </div>
       </form>

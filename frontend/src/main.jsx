@@ -20,6 +20,12 @@ registerSW({
   },
 });
 
+// Link de lançamento (/importar#d=...): guarda os dados antes de um eventual
+// redirecionamento para o login, que perderia o "#".
+if (window.location.pathname === "/importar" && window.location.hash.startsWith("#d=")) {
+  try { sessionStorage.setItem("rbs_importacao", window.location.hash.slice(3)); } catch { /* opcional */ }
+}
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
