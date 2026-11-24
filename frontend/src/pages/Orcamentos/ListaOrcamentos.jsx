@@ -5,7 +5,6 @@ import { Plus } from "lucide-react";
 import { db } from "../../services/firebase";
 import { STATUS, numeroFmt } from "../../lib/orcamentos";
 import LinhaOrcamento from "../../components/orcamentos/LinhaOrcamento";
-import ImportacoesPendentes from "../../components/orcamentos/ImportacoesPendentes";
 
 export default function ListaOrcamentos() {
   const [lista, setLista] = useState([]);
@@ -38,7 +37,6 @@ export default function ListaOrcamentos() {
         <h1 className="text-2xl font-extrabold text-rbs-navy">Orçamentos</h1>
         <Link to="/orcamentos/novo" className="inline-flex items-center gap-1 rounded-lg bg-rbs px-4 py-2 text-sm font-semibold text-white"><Plus size={16} /> Novo</Link>
       </div>
-      <ImportacoesPendentes aoImportar={carregar} />
       <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
         <input aria-label="Buscar" placeholder="Buscar por cliente ou número" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" value={busca} onChange={(e) => setBusca(e.target.value)} />
         <select aria-label="Status" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
