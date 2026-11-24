@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Menu, Snowflake } from "lucide-react";
 import Sidebar from "./Sidebar";
 import BottomNav from "./BottomNav";
+import LancamentosAutomaticos from "./LancamentosAutomaticos";
 
 export default function AppLayout({ children }) {
   const [menuAberto, setMenuAberto] = useState(false);
@@ -17,7 +18,7 @@ export default function AppLayout({ children }) {
             RBS <span className="-ml-1 text-sky-300">PMOC</span>
           </Link>
         </header>
-        <main className="min-w-0 flex-1 p-3 pb-24 md:p-5 md:pb-5">{children}</main>
+        <main className="min-w-0 flex-1 p-3 pb-24 md:p-5 md:pb-5"><LancamentosAutomaticos />{children}</main>
       </div>
       <BottomNav aoAbrirMenu={() => setMenuAberto(true)} />
     </div>

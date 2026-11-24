@@ -49,7 +49,7 @@ function expandirEquipamentos(lista = []) {
   });
 }
 
-async function lancar(p) {
+export async function lancar(p) {
   const resultado = { novos: [], existentes: [] };
 
   // 1) Cliente: reaproveita se já houver um com o mesmo nome.
