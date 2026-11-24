@@ -108,5 +108,52 @@ export const LANCAMENTOS_CLAUDE = [
       "observacoes": "Por opção do cliente: circuitos em cabinho 750 V aparente e proteção somente por disjuntores, sem DR e sem DPS (NBR 5410 exige eletroduto para cabinho 750 V e DR 30 mA em banheiro e cozinha). Alimentador em 16 mm²: queda de tensão estimada no chuveiro 5,7% em plena carga. Emissão de TRT (CFT/CRT-RJ). Proposta original: Drive › RBS Engenharia › Clientes e Projetos › AUMENTO DE CARGA ROBERTA.",
       "requerArt": false
     }
+  },
+  {
+    "v": 1,
+    "id": "denise-20261123",
+    "cliente": {
+      "nome": "Denise Chachamovitz Leão de Salles",
+      "endereco": "Rua Barão de Itambi, 61 / apto 801 – Botafogo, Rio de Janeiro/RJ – CEP 22231-000",
+      "telefone": "(21) 98522-8022",
+      "contato": "juliana.teixeira@vpbg.com.br"
+    },
+    "equipamentos": [
+      {
+        "nome": "Split Hi-Wall 12.000 BTU/h",
+        "tipo": "Split Hi-Wall",
+        "capacidade": "12.000 BTU/h",
+        "quantidade": 3,
+        "periodicidade": "Semestral"
+      }
+    ],
+    "orcamento": {
+      "objeto": "Manutenção corretiva com laudo técnico – 3 Splits Hi-Wall 12.000 BTU/h",
+      "porEquipamento": true,
+      "itens": [
+        {
+          "descricao": "Manutenção corretiva com diagnóstico e laudo técnico",
+          "tipo": "Mão de Obra",
+          "valorUnit": 350
+        }
+      ],
+      "escopo": "Diagnóstico, manutenção corretiva e emissão de laudo técnico por equipamento.",
+      "prazoExecucao": "Segunda-feira, 30/11/2026, pela manhã",
+      "condicoesPagamento": "À vista, via PIX ou transferência",
+      "validadeDias": 15,
+      "garantia": "90 dias para os serviços executados.",
+      "naoInclusos": "Peças e materiais (capacitor, placa, gás refrigerante etc.), orçados à parte após o diagnóstico, se necessário.",
+      "observacoes": "CPF: 256.201.318-23 • E-mail: juliana.teixeira@vpbg.com.br • Laudo emitido pelo responsável técnico, CRT-RJ 08482058711.",
+      "status": "Aprovado"
+    },
+    "agendamento": {
+      "titulo": "Manutenção corretiva c/ laudo – 3 Splits 12.000",
+      "data": "2026-11-30",
+      "hora": "08:00",
+      "horaFim": "12:00",
+      "valor": 1050,
+      "jaNoGoogle": true,
+      "descricao": "Proposta Nº 2026/1123-01. Peças à parte."
+    }
   }
 ];
